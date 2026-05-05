@@ -1,0 +1,25 @@
+{
+    "Group": "Hyzalia",
+    "Name": "Hyzaliaearlies",
+    "Version": "1.0.0",
+    "Description": "Hyzalia early bridge for ToolOperation execute0 visibility patch",
+    "Authors": [
+        {
+            "Name": "Hyzalia - MMORPG Server"
+        },
+        {
+            "Name": "Snyker"
+        }
+    ],
+    "Website": "https://hyzalia.com",
+    "Dependencies": {
+        
+    },
+    "OptionalDependencies": {
+        
+    },
+    "DisabledByDefault": false,
+    "Main": "com.hyzalia.paint.early.ToolOperationExecute0PublicTransformer",
+    "IncludesAssetPack": false,
+    "ServerVersion": "*"
+}
