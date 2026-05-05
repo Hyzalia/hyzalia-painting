@@ -147,6 +147,36 @@ tasks.named('build') {
     dependsOn 'shadowJar'
 }
 
+def releaseStagingDir = layout.buildDirectory.dir('release-staging')
+
+tasks.register('prepareReleaseBundle', Sync) {
+    group = 'distribution'
+    description = 'Prépare un bundle release prêt à copier (mods/ + earlyplugins/).'
+    dependsOn tasks.named('shadowJar')
+    dependsOn rootProject.project('early-bridge').tasks.named('jar')
+
+    into(releaseStagingDir)
+
+    from(tasks.named('shadowJar').flatMap { it.archiveFile }) {
+        into 'mods'
+    }
+    from(rootProject.project('early-bridge').tasks.named('jar', Jar).flatMap { it.archiveFile }) {
+        into 'earlyplugins'
+    }
+    from('README.md')
+    from('LICENSE')
+}
+
+tasks.register('packageRelease', Zip) {
+    group = 'distribution'
+    description = 'Crée une archive ZIP release avec mods/ et earlyplugins/.'
+    dependsOn tasks.named('prepareReleaseBundle')
+    archiveBaseName.set("${rootProject.name}-release")
+    archiveVersion.set(project.version.toString())
+    destinationDirectory.set(layout.buildDirectory.dir('distributions'))
+    from(releaseStagingDir)
+}
+
 if (hasHytaleHome) {
     // Create the working directory to run the server if it does not already exist.
     def serverRunDir = file("$projectDir/run")
