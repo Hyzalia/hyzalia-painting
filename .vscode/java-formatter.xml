@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<profiles version="21">
+  <profile kind="CodeFormatterProfile" name="Hyzalia" version="21">
+    <!-- Longueur max : les chaînes (builder) passent à la ligne après chaque .méthode() -->
+    <setting id="org.eclipse.jdt.core.formatter.lineSplit" value="80"/>
+    <!-- Ne pas recoller les lignes déjà coupées (préserve les retours à la ligne dans les chaînes) -->
+    <setting id="org.eclipse.jdt.core.formatter.join_wrapped_lines" value="false"/>
+    <!-- Indentation des lignes de continuation (chaînes, arguments) -->
+    <setting id="org.eclipse.jdt.core.formatter.continuation_indentation" value="2"/>
+  </profile>
+</profiles>

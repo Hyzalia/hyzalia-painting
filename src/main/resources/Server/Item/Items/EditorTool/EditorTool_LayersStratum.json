@@ -1,0 +1,420 @@
+{
+  "TranslationProperties": {
+    "Name": "server.builderTools.tools.LayersStratum.name",
+    "Description": "server.builderTools.tools.LayersStratum.description"
+  },
+  "Icon": "Icons/ItemsGenerated/EditorTool_LayersStratum.png",
+  "Categories": [
+    "Tool.BuilderToolSecondPage"
+  ],
+  "SubCategory": "SpecializedTools",
+  "Model": "Items/Tools/Brush/Brush.blockymodel",
+  "Texture": "Items/Tools/Brush/Brush_Texture.png",
+  "MaxStack": 1,
+  "PlayerAnimationsId": "Item",
+  "BuilderTool": {
+    "Id": "LayersStratum",
+    "IsBrush": true,
+    "Args": [
+      {
+        "Type": "Int",
+        "Id": "builtin_Width",
+        "Default": 5,
+        "Min": 1,
+        "Max": 100
+      },
+      {
+        "Type": "Int",
+        "Id": "builtin_Height",
+        "Default": 5,
+        "Min": 1,
+        "Max": 100
+      },
+      {
+        "Type": "Option",
+        "Id": "builtin_Shape",
+        "Default": "Sphere",
+        "Options": [
+          "Cube",
+          "Sphere",
+          "Cylinder",
+          "Cone",
+          "InvertedCone",
+          "Pyramid",
+          "InvertedPyramid",
+          "Dome",
+          "InvertedDome",
+          "Diamond",
+          "Torus"
+        ]
+      },
+      {
+        "Type": "Option",
+        "Id": "aDirection",
+        "Default": "Down",
+        "Options": [
+          "Up",
+          "Down",
+          "Camera",
+          "North",
+          "South",
+          "East",
+          "West"
+        ]
+      },
+      {
+        "Type": "Bool",
+        "Id": "zUseWorldStratum",
+        "Default": false
+      },
+      {
+        "Type": "Int",
+        "Id": "zaStratumTopY",
+        "Default": 255,
+        "Min": -512,
+        "Max": 512
+      },
+      {
+        "Type": "Int",
+        "Id": "zbStratumBottomY",
+        "Default": -64,
+        "Min": -512,
+        "Max": 512
+      },
+      {
+        "Type": "Int",
+        "Id": "bLayerOneLength",
+        "Default": 1,
+        "Min": 1,
+        "Max": 100
+      },
+      {
+        "Type": "Int",
+        "Id": "bLayerRadUpLength",
+        "Default": 0,
+        "Min": 0,
+        "Max": 10
+      },
+      {
+        "Type": "Int",
+        "Id": "bLayerRadUpChance",
+        "Default": 50,
+        "Min": 0,
+        "Max": 100
+      },
+      {
+        "Type": "Int",
+        "Id": "bLayerRadDownLength",
+        "Default": 0,
+        "Min": 0,
+        "Max": 10
+      },
+      {
+        "Type": "Int",
+        "Id": "bLayerRadDownChance",
+        "Default": 50,
+        "Min": 0,
+        "Max": 100
+      },
+      {
+        "Type": "Block",
+        "Id": "cLayerOneMaterial",
+        "Default": "Soil_Grass_Full",
+        "AllowPattern": true
+      },
+      {
+        "Type": "Bool",
+        "Id": "dEnableLayerTwo",
+        "Default": true
+      },
+      {
+        "Type": "Int",
+        "Id": "eLayerTwoLength",
+        "Default": 1,
+        "Min": 1,
+        "Max": 100
+      },
+      {
+        "Type": "Int",
+        "Id": "eLayerRadUpLength",
+        "Default": 0,
+        "Min": 0,
+        "Max": 10
+      },
+      {
+        "Type": "Int",
+        "Id": "eLayerRadUpChance",
+        "Default": 50,
+        "Min": 0,
+        "Max": 100
+      },
+      {
+        "Type": "Int",
+        "Id": "eLayerRadDownLength",
+        "Default": 0,
+        "Min": 0,
+        "Max": 10
+      },
+      {
+        "Type": "Int",
+        "Id": "eLayerRadDownChance",
+        "Default": 50,
+        "Min": 0,
+        "Max": 100
+      },
+      {
+        "Type": "Block",
+        "Id": "fLayerTwoMaterial",
+        "Default": "Soil_Dirt",
+        "AllowPattern": true
+      },
+      {
+        "Type": "Bool",
+        "Id": "gEnableLayerThree",
+        "Default": true
+      },
+      {
+        "Type": "Int",
+        "Id": "hLayerThreeLength",
+        "Default": 1,
+        "Min": 1,
+        "Max": 100
+      },
+      {
+        "Type": "Int",
+        "Id": "hLayerRadUpLength",
+        "Default": 0,
+        "Min": 0,
+        "Max": 10
+      },
+      {
+        "Type": "Int",
+        "Id": "hLayerRadUpChance",
+        "Default": 50,
+        "Min": 0,
+        "Max": 100
+      },
+      {
+        "Type": "Int",
+        "Id": "hLayerRadDownLength",
+        "Default": 0,
+        "Min": 0,
+        "Max": 10
+      },
+      {
+        "Type": "Int",
+        "Id": "hLayerRadDownChance",
+        "Default": 50,
+        "Min": 0,
+        "Max": 100
+      },
+      {
+        "Type": "Block",
+        "Id": "iLayerThreeMaterial",
+        "Default": "Rock_Chalk",
+        "AllowPattern": true
+      },
+      {
+        "Type": "Bool",
+        "Id": "jEnableLayerFour",
+        "Default": false
+      },
+      {
+        "Type": "Int",
+        "Id": "kLayerFourLength",
+        "Default": 1,
+        "Min": 1,
+        "Max": 100
+      },
+      {
+        "Type": "Int",
+        "Id": "kLayerRadUpLength",
+        "Default": 0,
+        "Min": 0,
+        "Max": 10
+      },
+      {
+        "Type": "Int",
+        "Id": "kLayerRadUpChance",
+        "Default": 50,
+        "Min": 0,
+        "Max": 100
+      },
+      {
+        "Type": "Int",
+        "Id": "kLayerRadDownLength",
+        "Default": 0,
+        "Min": 0,
+        "Max": 10
+      },
+      {
+        "Type": "Int",
+        "Id": "kLayerRadDownChance",
+        "Default": 50,
+        "Min": 0,
+        "Max": 100
+      },
+      {
+        "Type": "Block",
+        "Id": "lLayerFourMaterial",
+        "Default": "Rock_Stone",
+        "AllowPattern": true
+      },
+      {
+        "Type": "Bool",
+        "Id": "mEnableLayerFive",
+        "Default": false
+      },
+      {
+        "Type": "Int",
+        "Id": "nLayerFiveLength",
+        "Default": 1,
+        "Min": 1,
+        "Max": 100
+      },
+      {
+        "Type": "Int",
+        "Id": "nLayerRadUpLength",
+        "Default": 0,
+        "Min": 0,
+        "Max": 10
+      },
+      {
+        "Type": "Int",
+        "Id": "nLayerRadUpChance",
+        "Default": 50,
+        "Min": 0,
+        "Max": 100
+      },
+      {
+        "Type": "Int",
+        "Id": "nLayerRadDownLength",
+        "Default": 0,
+        "Min": 0,
+        "Max": 10
+      },
+      {
+        "Type": "Int",
+        "Id": "nLayerRadDownChance",
+        "Default": 50,
+        "Min": 0,
+        "Max": 100
+      },
+      {
+        "Type": "Block",
+        "Id": "oLayerFiveMaterial",
+        "Default": "Rock_Stone",
+        "AllowPattern": true
+      },
+      {
+        "Type": "Bool",
+        "Id": "pEnableLayerSix",
+        "Default": false
+      },
+      {
+        "Type": "Int",
+        "Id": "qLayerSixLength",
+        "Default": 1,
+        "Min": 1,
+        "Max": 100
+      },
+      {
+        "Type": "Int",
+        "Id": "qLayerRadUpLength",
+        "Default": 0,
+        "Min": 0,
+        "Max": 10
+      },
+      {
+        "Type": "Int",
+        "Id": "qLayerRadUpChance",
+        "Default": 50,
+        "Min": 0,
+        "Max": 100
+      },
+      {
+        "Type": "Int",
+        "Id": "qLayerRadDownLength",
+        "Default": 0,
+        "Min": 0,
+        "Max": 10
+      },
+      {
+        "Type": "Int",
+        "Id": "qLayerRadDownChance",
+        "Default": 50,
+        "Min": 0,
+        "Max": 100
+      },
+      {
+        "Type": "Block",
+        "Id": "rLayerSixMaterial",
+        "Default": "Rock_Stone",
+        "AllowPattern": true
+      },
+      {
+        "Type": "Int",
+        "Id": "sBrushDensity",
+        "Default": 100,
+        "Min": 1,
+        "Max": 100
+      },
+      {
+        "Type": "Bool",
+        "Id": "tSkipLayerOne",
+        "Default": false
+      },
+      {
+        "Type": "Bool",
+        "Id": "uSkipLayerTwo",
+        "Default": false
+      },
+      {
+        "Type": "Bool",
+        "Id": "vSkipLayerThree",
+        "Default": false
+      },
+      {
+        "Type": "Bool",
+        "Id": "wSkipLayerFour",
+        "Default": false
+      },
+      {
+        "Type": "Bool",
+        "Id": "xSkipLayerFive",
+        "Default": false
+      },
+      {
+        "Type": "Bool",
+        "Id": "ySkipLayerSix",
+        "Default": false
+      }
+    ]
+  },
+  "Interactions": {
+    "Primary": "Builder_Tool",
+    "Secondary": "Builder_Tool"
+  },
+  "InteractionConfig": {
+    "DebugOutlines": true,
+    "UseDistance": {
+      "Adventure": 128,
+      "Creative": 128
+    },
+    "AllEntities": true
+  },
+  "Set": "AAAA20",
+  "Quality": "Tool",
+  "IconProperties": {
+    "Scale": 0.58823,
+    "Rotation": [
+      22.5,
+      45,
+      22.5
+    ],
+    "Translation": [
+      0,
+      -13.5
+    ]
+  }
+}

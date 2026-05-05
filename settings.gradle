@@ -1,0 +1,2 @@
+rootProject.name = 'hyzalia-paint'
+include 'early-bridge'

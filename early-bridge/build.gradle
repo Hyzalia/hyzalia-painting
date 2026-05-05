@@ -1,0 +1,42 @@
+plugins {
+    id 'java'
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(
+            Integer.parseInt(findProperty('java_version')?.toString() ?: '25'))
+}
+
+group = 'com.hyzalia.paint'
+version = rootProject.version
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'hytale-release'
+        url = uri('https://maven.hytale.com/release')
+    }
+    maven {
+        name = 'hytale-pre-release'
+        url = uri('https://maven.hytale.com/pre-release')
+    }
+}
+
+dependencies {
+    compileOnly "com.hypixel.hytale:Server:${findProperty('hytale_build')}"
+    implementation 'org.ow2.asm:asm:9.8'
+}
+
+tasks.named('jar', Jar) {
+    // Nom volontairement different du shadow principal (hyzalia-paint-*.jar) pour eviter
+    // de copier le mauvais fichier dans earlyplugins/ (le mod complet ne contient pas ClassTransformer).
+    archiveBaseName = 'HyzaliaPaint-EarlyBridge-execute0'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    // Le chargeur early n'a pas le classpath du mod : embarquer ASM (implementation).
+    from {
+        configurations.runtimeClasspath.collect { f ->
+            f.isDirectory() ? f : zipTree(f)
+        }
+    }
+    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA'
+}

@@ -1,0 +1,297 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.gradle.plugin.idea-ext' version '1.3'
+    id 'com.gradleup.shadow' version '9.3.1'
+}
+
+import org.gradle.internal.os.OperatingSystem
+
+ext {
+    if (project.hasProperty('hytale_home')) {
+        hytaleHome = project.findProperty('hytale_home')
+    } else if (System.getenv('HYTALE_HOME')) {
+        hytaleHome = System.getenv('HYTALE_HOME')
+    } else {
+        def os = OperatingSystem.current()
+        if (os.isWindows()) {
+            hytaleHome = "${System.getProperty("user.home")}/AppData/Roaming/Hytale"
+        }
+        else if (os.isMacOsX()) {
+            hytaleHome = "${System.getProperty("user.home")}/Library/Application Support/Hytale"
+        }
+        else if (os.isLinux()) {
+            hytaleHome = "${System.getProperty("user.home")}/.var/app/com.hypixel.HytaleLauncher/data/Hytale"
+            if (!file(hytaleHome).exists()) {
+                hytaleHome = "${System.getProperty("user.home")}/.local/share/Hytale"
+            }
+        }
+    }
+}
+
+def hytaleHomePath = ext.has('hytaleHome') ? hytaleHome : null
+def hasHytaleHome = (hytaleHomePath != null) && file(hytaleHomePath).exists()
+if (!hasHytaleHome) {
+    logger.lifecycle("Hytale install not detected; run configs that launch the server will be skipped. Set -Phytale_home=/path/to/Hytale to enable them.")
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(java_version)
+    withSourcesJar()
+    withJavadocJar()
+}
+
+// Quiet warnings about missing Javadocs ; liens vers l’API serveur (element-list sur le site release).
+javadoc {
+    options.addStringOption('Xdoclint:-missing', '-quiet')
+    options.links('https://release.server.docs.hytale.com/')
+}
+
+// Serveur Hytale : compileOnly (Maven) pour compiler ; ne pas mettre le JAR
+// install sur runtimeOnly — le shadowJar inclut runtimeClasspath et embarquerait
+// tout le serveur (classes com.hypixel.* dupliquées → AbstractMethodError en jeu).
+// runServerJar / IDEA / VS Code pointent explicitement vers HytaleServer.jar.
+dependencies {
+    compileOnly("com.hypixel.hytale:Server:$hytale_build")
+
+    // Your dependencies here
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = "hytale-release"
+        url = uri("https://maven.hytale.com/release")
+    }
+    maven {
+        name = "hytale-pre-release"
+        url = uri("https://maven.hytale.com/pre-release")
+    }
+}
+
+// Updates the manifest.json file with the latest properties from gradle.properties
+// (version, includes_pack, ServerVersion = hytale_build).
+tasks.register('updatePluginManifest') {
+    def manifestFile = file('src/main/resources/manifest.json')
+    doLast {
+        if (!manifestFile.exists()) {
+            throw new GradleException("Could not find manifest.json at ${manifestFile.path}!")
+        }
+        def manifestJson = new groovy.json.JsonSlurper().parseText(manifestFile.text)
+        manifestJson.Version = version
+        manifestJson.IncludesAssetPack = includes_pack.toBoolean()
+        manifestJson.ServerVersion = hytale_build
+        manifestFile.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(manifestJson))
+    }
+}
+
+// Makes sure the plugin manifest is up to date.
+tasks.named('processResources') {
+    dependsOn 'updatePluginManifest'
+}
+
+// Affiche la version ciblée par le plugin pour vérifier la cohérence avec le serveur.
+tasks.register('printPluginServerVersion') {
+    doLast {
+        logger.lifecycle("Plugin ServerVersion (manifest) = ${hytale_build}")
+        if (hasHytaleHome) {
+            def serverJar = file("$hytaleHome/install/$patchline/package/game/latest/Server/HytaleServer.jar")
+            if (serverJar.exists()) {
+                logger.lifecycle("Serveur utilisé (runServer) = $hytaleHome/install/.../HytaleServer.jar")
+                logger.lifecycle("Pour supprimer l'alerte, le build du serveur doit correspondre à: ${hytale_build}")
+            }
+        }
+    }
+}
+
+// Pont ToolOperation (package com.hypixel… pour execute0 package-private) : garder
+// src/main/java/com/hypixel/hytale/builtin/buildertools/tooloperations/ dans le source set
+// main — ne pas exclure ce répertoire du compile ni du shadowJar.
+tasks.register('verifyShadowJarContainsLayersStratum') {
+    group = 'verification'
+    description = 'Vérifie le JAR plugin : pont LayersStratum présent, aucune autre classe buildertools Hypixel embarquée.'
+    doLast {
+        def jarFile = tasks.named('shadowJar').get().archiveFile.get().asFile
+        def allowedBridge = 'com/hypixel/hytale/builtin/buildertools/tooloperations/LayersStratumOperation.class'
+        def prefix = 'com/hypixel/hytale/builtin/buildertools/'
+        new java.util.jar.JarFile(jarFile).withCloseable { jar ->
+            if (jar.getEntry(allowedBridge) == null) {
+                throw new GradleException(
+                        "JAR plugin incomplet : entrée manquante ${allowedBridge}. " +
+                        "Vérifier qu'aucune exclusion ne retire les sources com/hypixel sous src/main/java.")
+            }
+            def forbidden = [] as ArrayList<String>
+            jar.entries().each { e ->
+                if (!e.directory && e.name.endsWith('.class') && e.name.startsWith(prefix) && e.name != allowedBridge) {
+                    forbidden.add(e.name)
+                }
+            }
+            if (!forbidden.isEmpty()) {
+                throw new GradleException(
+                        "JAR plugin invalide : ne doit embarquer aucune classe sous ${prefix} sauf ${allowedBridge}. " +
+                        "Trouvé : ${forbidden.take(12)}${forbidden.size() > 12 ? '...' : ''}. " +
+                        "Cela duplique l'API BuilderTools et provoque AbstractMethodError (ex. runtimeOnly du serveur dans shadow).")
+            }
+        }
+    }
+}
+
+tasks.named('shadowJar') {
+    dependsOn ':early-bridge:jar'
+    archiveClassifier.set('')
+    mergeServiceFiles()
+    finalizedBy 'verifyShadowJarContainsLayersStratum'
+}
+
+// shadowJar entraine deja :early-bridge:jar (JAR ASM execute0 pour earlyplugins/).
+tasks.named('build') {
+    dependsOn 'shadowJar'
+}
+
+if (hasHytaleHome) {
+    // Create the working directory to run the server if it does not already exist.
+    def serverRunDir = file("$projectDir/run")
+    if (!serverRunDir.exists()) {
+        serverRunDir.mkdirs()
+    }
+
+    def createServerRunArguments = { String srcDir ->
+        def programParameters = '--accept-early-plugins --allow-op --disable-sentry --assets="'
+                .concat("${hytaleHome}/install/$patchline/package/game/latest/Assets.zip").concat('"')
+        def modPaths = []
+        if (includes_pack.toBoolean()) {
+            modPaths << srcDir
+        }
+        if (load_user_mods.toBoolean()) {
+            modPaths << "${hytaleHome}/UserData/Mods"
+        }
+        if (!modPaths.isEmpty()) {
+            programParameters += ' --mods="' + modPaths.join(',') + '"'
+        }
+        return programParameters
+    }
+
+    def serverJar = file("$hytaleHome/install/$patchline/package/game/latest/Server/HytaleServer.jar")
+    def assetsZip = file("$hytaleHome/install/$patchline/package/game/latest/Assets.zip")
+    def shadowJarTask = tasks.named('shadowJar')
+    // Force l’évaluation du sous-projet pour que la tâche `jar` existe avant de référencer ses sorties.
+    def earlyBridgeProject = rootProject.project('early-bridge')
+    // Dossier dédié : build/libs contient aussi -sources.jar / -javadoc.jar → éviter de charger deux fois le même mod.
+    def runModsDir = file("$serverRunDir/mods")
+    def runEarlyPluginsDir = file("$serverRunDir/earlyplugins")
+
+    tasks.register('prepareRunEarlyPlugins', Sync) {
+        group = 'hytale run'
+        description = 'Copie HyzaliaPaint-EarlyBridge-execute0-*.jar (ASM execute0) dans run/earlyplugins/ — pas le shadow mod.'
+        dependsOn earlyBridgeProject.tasks.named('jar')
+        from(earlyBridgeProject.tasks.named('jar', Jar).flatMap { it.archiveFile })
+        into runEarlyPluginsDir
+    }
+
+    tasks.register('prepareRunMods', Sync) {
+        dependsOn 'prepareRunEarlyPlugins'
+        dependsOn shadowJarTask
+        from shadowJarTask.get().archiveFile
+        into runModsDir
+    }
+
+    tasks.register('runServerJar', JavaExec) {
+        dependsOn tasks.named('prepareRunMods')
+        mainClass = 'com.hypixel.hytale.Main'
+        classpath = files(serverJar)
+        workingDir = serverRunDir.absolutePath
+        doFirst {
+            // cwd = run/ → chargement auto de ./mods ; ne pas repasser ce dossier dans --mods (doublon plugin).
+            def modPaths = []
+            if (load_user_mods.toBoolean()) {
+                modPaths << "${hytaleHome}/UserData/Mods"
+            }
+            def argsList = [
+                    '--accept-early-plugins',
+                    '--allow-op',
+                    '--disable-sentry',
+                    "--assets=${assetsZip}",
+            ]
+            if (!modPaths.isEmpty()) {
+                argsList << "--mods=${modPaths.join(',')}"
+            }
+            setArgs(argsList)
+        }
+    }
+
+    tasks.register('runServer') {
+        dependsOn 'runServerJar'
+    }
+
+    // Creates a run configuration in IDEA that will run the Hytale server with
+    // your plugin and the default assets.
+    idea.project.settings.runConfigurations {
+        'HytaleServer'(org.jetbrains.gradle.ext.Application) {
+            mainClass = 'com.hypixel.hytale.Main'
+            moduleName = project.idea.module.name + '.main'
+            programParameters = createServerRunArguments(sourceSets.main.java.srcDirs.first().parentFile.absolutePath)
+            workingDirectory = serverRunDir.absolutePath
+        }
+    }
+
+    // VS Code / Cursor : lancer le serveur hors Gradle JavaExec pour un vrai TTY (console interactive, comme IntelliJ).
+    tasks.register('generateVSCodeLaunch') {
+        def vscodeDir = file("$projectDir/.vscode")
+        def launchFile = file("$vscodeDir/launch.json")
+        def tasksFile = file("$vscodeDir/tasks.json")
+        doLast {
+            if (!vscodeDir.exists()) {
+                vscodeDir.mkdirs()
+            }
+            def vscodeArgs = [
+                    '--accept-early-plugins',
+                    '--allow-op',
+                    '--disable-sentry',
+                    "--assets=${assetsZip.absolutePath}",
+            ]
+            if (load_user_mods.toBoolean()) {
+                vscodeArgs << "--mods=${file("${hytaleHome}/UserData/Mods").absolutePath}"
+            }
+            def launchConfiguration = [
+                    type               : 'java',
+                    name               : 'HytaleServer',
+                    request            : 'launch',
+                    mainClass          : 'com.hypixel.hytale.Main',
+                    classPaths         : [serverJar.absolutePath],
+                    cwd                : '${workspaceFolder}/run',
+                    args               : vscodeArgs,
+                    console            : 'integratedTerminal',
+                    internalConsoleOptions: 'neverOpen',
+                    preLaunchTask      : 'Prepare Hytale run/mods',
+                    shortenCommandLine : 'argfile',
+            ]
+            def launchConfig = [
+                    version       : '0.2.0',
+                    configurations: [launchConfiguration],
+            ]
+            launchFile.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(launchConfig))
+
+            def prepareModsTask = [
+                    label          : 'Prepare Hytale run/mods',
+                    type           : 'shell',
+                    command        : './gradlew prepareRunMods',
+                    windows        : [command: '.\\gradlew.bat prepareRunMods'],
+                    options        : [cwd: '${workspaceFolder}'],
+                    problemMatcher : [],
+                    presentation   : [reveal: 'silent', panel: 'shared'],
+            ]
+            def tasksConfig = [
+                    version: '2.0.0',
+                    tasks  : [prepareModsTask],
+            ]
+            tasksFile.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(tasksConfig))
+
+            logger.lifecycle("VS Code / Cursor : ${launchFile.path} et ${tasksFile.path} — Run and Debug → « HytaleServer » (terminal interactif).")
+        }
+    }
+} else {
+    tasks.register('generateVSCodeLaunch') {
+        doLast {
+            logger.lifecycle("Skipped VSCode launch configuration because hytale_home is not set or the install path is missing.")
+        }
+    }
+}
