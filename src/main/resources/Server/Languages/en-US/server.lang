@@ -86,3 +86,5 @@ builderTools.tools.LayersStratum.args.vSkipLayerThree.name="Skip Layer 3"
 builderTools.tools.LayersStratum.args.wSkipLayerFour.name="Skip Layer 4"
 builderTools.tools.LayersStratum.args.xSkipLayerFive.name="Skip Layer 5"
 builderTools.tools.LayersStratum.args.ySkipLayerSix.name="Skip Layer 6"
+
+server.hyzalia.paint.prefabsavefluid.desc="Opens the prefab save UI (same as /prefab save) and ensures fluids are written even when using an Editor_Anchor block."

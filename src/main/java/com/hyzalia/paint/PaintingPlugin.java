@@ -5,6 +5,7 @@ import com.hypixel.hytale.builtin.buildertools.tooloperations.ToolOperation;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
+import com.hyzalia.paint.prefab.PrefabSaveFluidCommand;
 
 import javax.annotation.Nonnull;
 import java.lang.reflect.Method;
@@ -41,6 +42,8 @@ public class PaintingPlugin extends JavaPlugin {
         ToolOperation.OPERATIONS.put(LAYERS_STRATUM_TOOL_ID, LayersStratumOperation::new);
         LOGGER.atInfo().log("[" + PaintingConstants.SERVER_NAME
                 + "] BuilderTool '" + LAYERS_STRATUM_TOOL_ID + "' enregistré.");
+        getCommandRegistry().registerCommand(new PrefabSaveFluidCommand());
+        LOGGER.atInfo().log("[" + PaintingConstants.SERVER_NAME + "] Commande /prefabsavefluid enregistrée.");
     }
 
     @Override
