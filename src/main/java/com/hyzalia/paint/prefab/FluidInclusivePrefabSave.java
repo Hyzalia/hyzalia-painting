@@ -8,7 +8,8 @@ import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.math.util.ChunkUtil;
 import com.hypixel.hytale.math.util.MathUtil;
-import com.hypixel.hytale.math.vector.Vector3i;
+import com.hypixel.hytale.math.vector.Vector3iUtil;
+import org.joml.Vector3i;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.prefab.PrefabStore;
 import com.hypixel.hytale.server.core.prefab.config.SelectionPrefabSerializer;
@@ -18,7 +19,6 @@ import com.hypixel.hytale.server.core.universe.world.accessor.LocalCachedChunkAc
 import com.hypixel.hytale.server.core.universe.world.chunk.ChunkColumn;
 import com.hypixel.hytale.server.core.universe.world.chunk.WorldChunk;
 import com.hypixel.hytale.server.core.universe.world.chunk.section.FluidSection;
-import com.hypixel.hytale.server.core.universe.world.storage.ChunkStore;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.util.BsonUtil;
 import com.hyzalia.paint.PaintingConstants;
@@ -103,9 +103,9 @@ public final class FluidInclusivePrefabSave {
         }
         var pos = transform.getPosition();
         return new Vector3i(
-                MathUtil.floor(pos.getX()),
-                MathUtil.floor(pos.getY()),
-                MathUtil.floor(pos.getZ()));
+                MathUtil.floor(pos.x()),
+                MathUtil.floor(pos.y()),
+                MathUtil.floor(pos.z()));
     }
 
     private static String resolvePrefabFileKey(String name) {
@@ -126,11 +126,11 @@ public final class FluidInclusivePrefabSave {
             return;
         }
 
-        Vector3i min = Vector3i.min(marquee.getSelectionMin(), marquee.getSelectionMax());
-        Vector3i max = Vector3i.max(marquee.getSelectionMin(), marquee.getSelectionMax());
+        Vector3i min = Vector3iUtil.min(marquee.getSelectionMin(), marquee.getSelectionMax());
+        Vector3i max = Vector3iUtil.max(marquee.getSelectionMin(), marquee.getSelectionMax());
 
         PrefabStore store = PrefabStore.get();
-        Path root = store.getPrefabsPathForPack(pack);
+        Path root = store.getAssetPrefabsPathForPack(pack);
         Path path = PathUtil.resolvePathWithinDir(root, prefabKey);
         if (path == null) {
             LOGGER.atWarning().log(
@@ -151,10 +151,10 @@ public final class FluidInclusivePrefabSave {
 
         clearSelectionFluids(saved);
 
-        int minX = min.getX();
-        int maxX = max.getX();
-        int minZ = min.getZ();
-        int maxZ = max.getZ();
+        int minX = min.x();
+        int maxX = max.x();
+        int minZ = min.z();
+        int maxZ = max.z();
         int dx = maxX - minX;
         int dz = maxZ - minZ;
         int radius = Math.max(dx, dz);
@@ -164,10 +164,8 @@ public final class FluidInclusivePrefabSave {
                 minZ + dz / 2,
                 radius);
 
-        ChunkStore chunkStore = world.getChunkStore();
-
-        int minY = min.getY();
-        int maxY = max.getY();
+        int minY = min.y();
+        int maxY = max.y();
         for (int x = minX; x <= maxX; x++) {
             for (int z = minZ; z <= maxZ; z++) {
                 WorldChunk chunk = accessorChunks.getChunk(ChunkUtil.indexChunkFromBlock(x, z));
@@ -175,7 +173,7 @@ public final class FluidInclusivePrefabSave {
                     continue;
                 }
                 for (int y = minY; y <= maxY; y++) {
-                    FluidSample fluid = readFluidSample(chunkStore, chunk, x, y, z);
+                    FluidSample fluid = readFluidSample(chunk, x, y, z);
                     if (fluid.fluidId != 0 || fluid.level != 0) {
                         if (blockBounds.any()) {
                             int lx = blockBounds.minX() + (x - minX);
@@ -238,19 +236,15 @@ public final class FluidInclusivePrefabSave {
     private record FluidSample(int fluidId, byte level) {
     }
 
-    private static FluidSample readFluidSample(
-            ChunkStore chunkStore,
-            WorldChunk worldChunk,
-            int x,
-            int y,
-            int z) {
+    @SuppressWarnings("deprecation")
+    private static FluidSample readFluidSample(WorldChunk worldChunk, int x, int y, int z) {
         var chunkRef = worldChunk.getReference();
-        var store = chunkStore.getStore();
+        var store = chunkRef.getStore();
         ChunkColumn column = store.getComponent(chunkRef, ChunkColumn.getComponentType());
         if (column == null) {
             return new FluidSample(0, (byte) 0);
         }
-        int sectionIdx = ChunkUtil.indexSection(y);
+        int sectionIdx = ChunkUtil.chunkCoordinate(y);
         var sectionRef = column.getSection(sectionIdx);
         if (sectionRef == null || !sectionRef.isValid()) {
             return new FluidSample(0, (byte) 0);

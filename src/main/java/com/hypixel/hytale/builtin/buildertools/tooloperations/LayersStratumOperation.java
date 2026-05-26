@@ -6,7 +6,9 @@ import com.hypixel.hytale.builtin.buildertools.tooloperations.ToolOperation;
 import com.hypixel.hytale.component.ComponentAccessor;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.math.util.ChunkUtil;
-import com.hypixel.hytale.math.vector.Vector3i;
+import com.hypixel.hytale.math.vector.Vector3iUtil;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
+import org.joml.Vector3i;
 import com.hypixel.hytale.protocol.packets.buildertools.BuilderToolOnUseInteraction;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.modules.entity.component.HeadRotation;
@@ -29,7 +31,7 @@ import java.util.Map;
  *   <li><strong>Surface</strong> (défaut) : colonnes depuis chaque bloc touché, épaisseur = rangées ;</li>
  *   <li><strong>Strate monde</strong> : bande Y fixe {@code [zbStratumBottomY, zaStratumTopY]} ; les
  *       épaisseurs sont des <em>poids</em> répartis sur la hauteur de bande (méthode du plus grand reste),
- *       puis dégradés RadUp/RadDown ; un seul bloc est peint par {@code execute0} selon {@code y}.</li>
+ *       puis dégradés RadUp/RadDown ; un seul bloc est peint par {@code executeBlock} selon {@code y}.</li>
  * </ul>
  *
  * <p>Extensions RadUp / RadDown hors bande : en strate monde, déclenchées une fois par colonne
@@ -47,15 +49,16 @@ public class LayersStratumOperation extends ToolOperation {
     private final int bandHeight;
 
     public LayersStratumOperation(
-            @Nonnull Ref<EntityStore> playerRef,
+            @Nonnull Ref<EntityStore> playerEntityRef,
             @Nonnull Player player,
+            @Nonnull PlayerRef playerRef,
             @Nonnull BuilderToolOnUseInteraction interaction,
             @Nonnull ComponentAccessor<EntityStore> components) {
-        super(playerRef, interaction, components);
+        super(playerEntityRef, interaction, components);
 
         Map<String, Object> tool = this.args.tool();
 
-        HeadRotation headRotation = components.getComponent(playerRef, HeadRotation.getComponentType());
+        HeadRotation headRotation = components.getComponent(playerEntityRef, HeadRotation.getComponentType());
         this.depthDirection = resolveDirection(tool, headRotation);
         this.brushDensity = readInt(tool, "sBrushDensity", 100);
 
@@ -106,15 +109,8 @@ public class LayersStratumOperation extends ToolOperation {
         this.activeLayers = active;
     }
 
-    /**
-     * Visibilité {@code public} : compatible parent {@code package-private} / {@code protected}
-     * / {@code public} (élargissement). Même package que {@link ToolOperation} — le contrat
-     * d’extension BuilderTools est déjà satisfait ; un early-plugin qui modifie {@code ToolOperation}
-     * ne corrige pas un {@link java.lang.AbstractMethodError} dû à deux définitions de classe
-     * (class loaders différents).
-     */
     @Override
-    public boolean execute0(int x, int y, int z) {
+    protected boolean executeBlock(int x, int y, int z) {
         if (this.edit.getBlock(x, y, z) <= 0) {
             return true;
         }
@@ -126,7 +122,7 @@ public class LayersStratumOperation extends ToolOperation {
         }
 
         if (this.worldStratum && this.bandHeight > 0) {
-            return execute0WorldStratum(x, y, z);
+            return executeBlockWorldStratum(x, y, z);
         }
 
         List<String> rowMaterials = LayersGradientBuilder.buildColumn(this.activeLayers, this.random);
@@ -150,9 +146,9 @@ public class LayersStratumOperation extends ToolOperation {
                 this.edit.getBefore(),
                 this.edit.getAfter());
 
-        int dx = this.depthDirection.getX();
-        int dy = this.depthDirection.getY();
-        int dz = this.depthDirection.getZ();
+        int dx = this.depthDirection.x();
+        int dy = this.depthDirection.y();
+        int dz = this.depthDirection.z();
         int upX = -dx;
         int upY = -dy;
         int upZ = -dz;
@@ -184,7 +180,7 @@ public class LayersStratumOperation extends ToolOperation {
      * Peint un bloc dans la bande Y monde : la rangée {@code stratumTopY - y} reçoit le matériau
      * issu de la colonne virtuelle de hauteur {@link #bandHeight} (poids + dégradés).
      */
-    private boolean execute0WorldStratum(int x, int y, int z) {
+    private boolean executeBlockWorldStratum(int x, int y, int z) {
         if (y < this.stratumBottomY || y > this.stratumTopY) {
             return true;
         }
@@ -201,9 +197,9 @@ public class LayersStratumOperation extends ToolOperation {
         String material = column.get(rowFromTop);
         placeMaterialAtBlock(x, y, z, material);
 
-        int dx = this.depthDirection.getX();
-        int dy = this.depthDirection.getY();
-        int dz = this.depthDirection.getZ();
+        int dx = this.depthDirection.x();
+        int dy = this.depthDirection.y();
+        int dz = this.depthDirection.z();
         int upX = -dx;
         int upY = -dy;
         int upZ = -dz;
@@ -305,26 +301,18 @@ public class LayersStratumOperation extends ToolOperation {
 
     private static Vector3i resolveDirection(Map<String, Object> tool, HeadRotation headRotation) {
         String direction = readString(tool, "aDirection", "Down");
-        switch (direction) {
-            case "Up":
-                return Vector3i.UP;
-            case "Down":
-                return Vector3i.DOWN;
-            case "North":
-                return Vector3i.NORTH;
-            case "South":
-                return Vector3i.SOUTH;
-            case "East":
-                return Vector3i.EAST;
-            case "West":
-                return Vector3i.WEST;
-            case "Camera":
-                return headRotation != null
-                        ? headRotation.getAxisDirection()
-                        : Vector3i.DOWN;
-            default:
-                return Vector3i.DOWN;
-        }
+        return switch (direction) {
+            case "Up" -> new Vector3i(Vector3iUtil.UP);
+            case "Down" -> new Vector3i(Vector3iUtil.DOWN);
+            case "North" -> new Vector3i(Vector3iUtil.NORTH);
+            case "South" -> new Vector3i(Vector3iUtil.SOUTH);
+            case "East" -> new Vector3i(Vector3iUtil.EAST);
+            case "West" -> new Vector3i(Vector3iUtil.WEST);
+            case "Camera" -> headRotation != null
+                    ? headRotation.getAxisDirection()
+                    : new Vector3i(Vector3iUtil.DOWN);
+            default -> new Vector3i(Vector3iUtil.DOWN);
+        };
     }
 
     private static int readInt(Map<String, Object> tool, String key, int defaultValue) {

@@ -46,6 +46,10 @@ javadoc {
     options.links('https://release.server.docs.hytale.com/')
 }
 
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['-Xlint:deprecation']
+}
+
 // Serveur Hytale : compileOnly (Maven) pour compiler ; ne pas mettre le JAR
 // install sur runtimeOnly — le shadowJar inclut runtimeClasspath et embarquerait
 // tout le serveur (classes com.hypixel.* dupliquées → AbstractMethodError en jeu).

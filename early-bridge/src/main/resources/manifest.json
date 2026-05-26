@@ -1,7 +1,7 @@
 {
     "Group": "Hyzalia",
     "Name": "Hyzaliaearlies",
-    "Version": "1.0.0",
+    "Version": "1.0.1",
     "Description": "Hyzalia early bridge for ToolOperation execute0 visibility patch",
     "Authors": [
         {

@@ -50,6 +50,18 @@
       },
       {
         "Type": "Option",
+        "Id": "builtin_Origin",
+        "Default": "Top",
+        "Options": [
+          "Center",
+          "Bottom",
+          "Top",
+          "Lowest",
+          "Highest"
+        ]
+      },
+      {
+        "Type": "Option",
         "Id": "aDirection",
         "Default": "Down",
         "Options": [

@@ -5,6 +5,7 @@ import com.hypixel.hytale.builtin.buildertools.tooloperations.ToolOperation;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
+import com.hyzalia.paint.commands.stratum.StratumCommand;
 import com.hyzalia.paint.prefab.PrefabSaveFluidCommand;
 
 import javax.annotation.Nonnull;
@@ -38,12 +39,14 @@ public class PaintingPlugin extends JavaPlugin {
                 + "getSuperclass()==ToolOperation.class => " + superIsCanonicalToolOp
                 + " ; CL ToolOperation=" + String.valueOf(opCl)
                 + " LayersStratumCL=" + String.valueOf(bridgeCl));
-        logToolOperationExecute0BridgeHint();
+        logToolOperationExecuteBlockBridgeHint();
         ToolOperation.OPERATIONS.put(LAYERS_STRATUM_TOOL_ID, LayersStratumOperation::new);
         LOGGER.atInfo().log("[" + PaintingConstants.SERVER_NAME
                 + "] BuilderTool '" + LAYERS_STRATUM_TOOL_ID + "' enregistré.");
         getCommandRegistry().registerCommand(new PrefabSaveFluidCommand());
         LOGGER.atInfo().log("[" + PaintingConstants.SERVER_NAME + "] Commande /prefabsavefluid enregistrée.");
+        getCommandRegistry().registerCommand(new StratumCommand());
+        LOGGER.atInfo().log("[" + PaintingConstants.SERVER_NAME + "] Commandes /stratum enregistrées.");
     }
 
     @Override
@@ -62,29 +65,26 @@ public class PaintingPlugin extends JavaPlugin {
     }
 
     /**
-     * Si {@code execute0} n’est pas {@code public} sur le {@code ToolOperation} chargé par le serveur,
-     * le bridge {@code LayersStratumOperation} (PluginClassLoader) ne peut pas override un membre
-     * {@code package-private} → {@link java.lang.AbstractMethodError}. Le correctif est le JAR
-     * <strong>early-bridge</strong> (ASM) dans {@code earlyplugins/}, pas le JAR du mod.
+     * Diagnostic au démarrage : depuis la prerelease, {@code ToolOperation#executeBlock} est
+     * {@code protected} (remplace {@code execute0}). Une sous-classe dans le même package logique
+     * peut l’overrider sans early-bridge ; le JAR early-bridge reste optionnel pour compatibilité.
      */
-    private static void logToolOperationExecute0BridgeHint() {
+    private static void logToolOperationExecuteBlockBridgeHint() {
         try {
-            Method m = ToolOperation.class.getDeclaredMethod("execute0", int.class, int.class, int.class);
+            Method m = ToolOperation.class.getDeclaredMethod("executeBlock", int.class, int.class, int.class);
             int mod = m.getModifiers();
-            if (Modifier.isPublic(mod)) {
+            if (Modifier.isProtected(mod) || Modifier.isPublic(mod)) {
                 LOGGER.atInfo().log("[" + PaintingConstants.SERVER_NAME
-                        + "] ToolOperation#execute0 est public (early-bridge actif ou API serveur elargie).");
+                        + "] ToolOperation#executeBlock est accessible (protected/public).");
                 return;
             }
-            LOGGER.atSevere().log("[" + PaintingConstants.SERVER_NAME + "] ERREUR CONFIG: ToolOperation#execute0 "
-                    + "n'est pas public (modifiers=0x" + Integer.toHexString(mod) + "). "
-                    + "Ne pas mettre hyzalia-paint-*.jar dans earlyplugins/ (le log [EarlyPlugin] Found doit montrer "
-                    + "HyzaliaPaint-EarlyBridge-execute0-*.jar). Copier depuis early-bridge/build/libs/ "
-                    + "le JAR HyzaliaPaint-EarlyBridge-execute0-*.jar seul dans earlyplugins/, "
-                    + "garder le mod dans mods/, lancer avec --accept-early-plugins.");
+            LOGGER.atSevere().log("[" + PaintingConstants.SERVER_NAME + "] ERREUR CONFIG: ToolOperation#executeBlock "
+                    + "n'est ni protected ni public (modifiers=0x" + Integer.toHexString(mod) + "). "
+                    + "Vérifier early-bridge (HyzaliaPaint-EarlyBridge-execute0-*.jar dans earlyplugins/) "
+                    + "et lancer avec --accept-early-plugins.");
         } catch (ReflectiveOperationException e) {
             LOGGER.atWarning().log("[" + PaintingConstants.SERVER_NAME
-                    + "] Impossible d'inspecter ToolOperation#execute0: " + e.getMessage());
+                    + "] Impossible d'inspecter ToolOperation#executeBlock: " + e.getMessage());
         }
     }
 }

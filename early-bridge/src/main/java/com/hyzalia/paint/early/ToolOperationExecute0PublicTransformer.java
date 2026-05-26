@@ -12,8 +12,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
- * Early-plugin : rend {@code ToolOperation#execute0(III)Z} {@code public} dans le bytecode
- * au chargement.
+ * Early-plugin : rend {@code ToolOperation#executeBlock(III)Z} {@code public} dans le bytecode
+ * au chargement (remplace l’ancien patch {@code execute0} des versions antérieures).
  *
  * <p>Sans cela, une sous-classe chargée par {@code PluginClassLoader} ne se trouve pas dans le
  * même <em>runtime package</em> que {@code ToolOperation} ({@code AppClassLoader}) : une méthode
@@ -57,7 +57,9 @@ public final class ToolOperationExecute0PublicTransformer implements ClassTransf
                     String signature,
                     String[] exceptions) {
                 int out = access;
-                if ("execute0".equals(name) && "(III)Z".equals(descriptor)) {
+                if ("executeBlock".equals(name) && "(III)Z".equals(descriptor)) {
+                    out = (access & ~(Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED)) | Opcodes.ACC_PUBLIC;
+                } else if ("execute0".equals(name) && "(III)Z".equals(descriptor)) {
                     out = (access & ~(Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED)) | Opcodes.ACC_PUBLIC;
                 }
                 return super.visitMethod(out, name, descriptor, signature, exceptions);
