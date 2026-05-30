@@ -1,0 +1,36 @@
+Group {
+  LayoutMode: Top;
+  Anchor: (Right: 24, Bottom: 140, Width: 320);
+
+  Group #PoolPanel {
+    LayoutMode: Top;
+    Padding: (Full: 10);
+    Background: (Color: #0f1419(0.82));
+
+    Label #PoolTitle {
+      Style: (FontSize: 14, RenderBold: true, TextColor: #e8c872);
+      Text: "Pool";
+    }
+
+    Label #PoolEmpty {
+      Style: (FontSize: 12, TextColor: #a5b4c4);
+      Visible: false;
+      Padding: (Top: 6);
+    }
+
+    Label #PoolRow0 { Style: (FontSize: 12, TextColor: #d0dae4); Visible: false; Padding: (Top: 2); }
+    Label #PoolRow1 { Style: (FontSize: 12, TextColor: #d0dae4); Visible: false; Padding: (Top: 2); }
+    Label #PoolRow2 { Style: (FontSize: 12, TextColor: #d0dae4); Visible: false; Padding: (Top: 2); }
+    Label #PoolRow3 { Style: (FontSize: 12, TextColor: #d0dae4); Visible: false; Padding: (Top: 2); }
+    Label #PoolRow4 { Style: (FontSize: 12, TextColor: #d0dae4); Visible: false; Padding: (Top: 2); }
+    Label #PoolRow5 { Style: (FontSize: 12, TextColor: #d0dae4); Visible: false; Padding: (Top: 2); }
+    Label #PoolRow6 { Style: (FontSize: 12, TextColor: #d0dae4); Visible: false; Padding: (Top: 2); }
+    Label #PoolRow7 { Style: (FontSize: 12, TextColor: #d0dae4); Visible: false; Padding: (Top: 2); }
+
+    Label #PoolMore {
+      Style: (FontSize: 11, TextColor: #8a9bb0);
+      Visible: false;
+      Padding: (Top: 4);
+    }
+  }
+}

@@ -1,23 +1,25 @@
 {
-  "Group": "Hyzalia",
-  "Name": "Painting",
-  "Version": "1.2.0",
-  "Description": "Plugin Hyzalia Painting",
-  "Authors": [
-    {
-      "Name": "Hyzalia - MMORPG Server"
+    "Group": "Hyzalia",
+    "Name": "Painting",
+    "Version": "1.3.0",
+    "Description": "Plugin Hyzalia Painting",
+    "Authors": [
+        {
+            "Name": "Hyzalia - MMORPG Server"
+        },
+        {
+            "Name": "Snyker"
+        }
+    ],
+    "Website": "https://hyzalia.com",
+    "Dependencies": {
+        "Hytale:BuilderTools": "*"
     },
-    {
-      "Name": "Snyker"
-    }
-  ],
-  "Website": "https://hyzalia.com",
-  "Dependencies": {
-    "Hytale:BuilderTools": "*"
-  },
-  "OptionalDependencies": {},
-  "DisabledByDefault": false,
-  "Main": "com.hyzalia.paint.PaintingPlugin",
-  "IncludesAssetPack": true,
-  "ServerVersion": "0.5.0"
+    "OptionalDependencies": {
+        
+    },
+    "DisabledByDefault": false,
+    "Main": "com.hyzalia.paint.PaintingPlugin",
+    "IncludesAssetPack": true,
+    "ServerVersion": "*"
 }

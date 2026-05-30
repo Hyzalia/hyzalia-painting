@@ -1,0 +1,59 @@
+@NameLabel = LabelStyle(FontSize: 13, TextColor: #d0dae4, VerticalAlignment: Center, HorizontalAlignment: Start);
+@NameLabelBold = LabelStyle(FontSize: 13, TextColor: #e8c872, RenderBold: true, VerticalAlignment: Center, HorizontalAlignment: Start);
+@PercentLabel = LabelStyle(FontSize: 12, TextColor: #8a9bb0, VerticalAlignment: Center, HorizontalAlignment: End);
+@FieldStyle = (FontSize: 13, TextColor: #d0dae4);
+@InputBackground = (Color: #1a2030(0.95));
+
+@RowSelectStyle = TextButtonStyle(
+  Default: (LabelStyle: @NameLabel),
+  Hovered: (LabelStyle: (...@NameLabel, TextColor: #ffffff)),
+  Pressed: (LabelStyle: @NameLabel)
+);
+
+@RowSelectSelectedStyle = TextButtonStyle(
+  Default: (LabelStyle: @NameLabelBold),
+  Hovered: (LabelStyle: (...@NameLabelBold, TextColor: #ffffff)),
+  Pressed: (LabelStyle: @NameLabelBold)
+);
+
+@FlatButtonStyle = TextButtonStyle(
+  Default: (Background: (Color: #3a4555), LabelStyle: (FontSize: 12, TextColor: #d0dae4, HorizontalAlignment: Center, VerticalAlignment: Center)),
+  Hovered: (Background: (Color: #4a5668), LabelStyle: (FontSize: 12, TextColor: #d0dae4, HorizontalAlignment: Center, VerticalAlignment: Center)),
+  Pressed: (Background: (Color: #2a3340), LabelStyle: (FontSize: 12, TextColor: #d0dae4, HorizontalAlignment: Center, VerticalAlignment: Center))
+);
+
+Group {
+  LayoutMode: Left;
+  Anchor: (Height: 34);
+  Padding: (Bottom: 4);
+
+  Label #SelectMark {
+    Anchor: (Width: 16, Height: 28);
+    Style: (FontSize: 14, TextColor: #e8c872, VerticalAlignment: Center, HorizontalAlignment: Center);
+    Text: "-";
+  }
+
+  TextButton #SelectRow {
+    FlexWeight: 1;
+    Anchor: (Height: 28);
+    Style: @RowSelectStyle;
+    Padding: (Left: 4);
+  }
+
+  Label #Percent {
+    Anchor: (Width: 44, Height: 28);
+    Style: @PercentLabel;
+  }
+
+  NumberField #Weight {
+    Anchor: (Width: 56, Height: 28);
+    Style: @FieldStyle;
+    Background: @InputBackground;
+  }
+
+  TextButton #Remove {
+    Anchor: (Width: 64, Height: 28, Left: 6);
+    Style: @FlatButtonStyle;
+    Text: "Remove";
+  }
+}

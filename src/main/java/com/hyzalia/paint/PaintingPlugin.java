@@ -2,10 +2,18 @@ package com.hyzalia.paint;
 
 import com.hypixel.hytale.builtin.buildertools.tooloperations.LayersStratumOperation;
 import com.hypixel.hytale.builtin.buildertools.tooloperations.ToolOperation;
+import com.hypixel.hytale.component.ComponentType;
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.server.core.io.ServerManager;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.hyzalia.paint.commands.paste.HyzaliaPasteCommand;
 import com.hyzalia.paint.commands.stratum.StratumCommand;
+import com.hyzalia.paint.paste.HyzaliaPasteToolClipboardSyncSystem;
+import com.hyzalia.paint.paste.HyzaliaPasteToolConstants;
+import com.hyzalia.paint.paste.HyzaliaPasteToolPacketHandler;
+import com.hyzalia.paint.paste.MultiPrefabPasteState;
 import com.hyzalia.paint.prefab.PrefabSaveFluidCommand;
 
 import javax.annotation.Nonnull;
@@ -43,10 +51,29 @@ public class PaintingPlugin extends JavaPlugin {
         ToolOperation.OPERATIONS.put(LAYERS_STRATUM_TOOL_ID, LayersStratumOperation::new);
         LOGGER.atInfo().log("[" + PaintingConstants.SERVER_NAME
                 + "] BuilderTool '" + LAYERS_STRATUM_TOOL_ID + "' enregistré.");
+
+        ComponentType<EntityStore, MultiPrefabPasteState> pasteStateType = getEntityStoreRegistry().registerComponent(
+                MultiPrefabPasteState.class,
+                MultiPrefabPasteState.COMPONENT_ID,
+                MultiPrefabPasteState.CODEC);
+        MultiPrefabPasteState.registerComponentType(pasteStateType);
+        LOGGER.atInfo().log("[" + PaintingConstants.SERVER_NAME
+                + "] Composant " + MultiPrefabPasteState.COMPONENT_ID + " enregistré (attach lazy via ensure).");
+
+        ServerManager.get().registerSubPacketHandlers(HyzaliaPasteToolPacketHandler::new);
+        LOGGER.atInfo().log("[" + PaintingConstants.SERVER_NAME
+                + "] Handlers réseau '" + HyzaliaPasteToolConstants.BUILDER_TOOL_ID + "' enregistrés.");
+
         getCommandRegistry().registerCommand(new PrefabSaveFluidCommand());
         LOGGER.atInfo().log("[" + PaintingConstants.SERVER_NAME + "] Commande /prefabsavefluid enregistrée.");
         getCommandRegistry().registerCommand(new StratumCommand());
         LOGGER.atInfo().log("[" + PaintingConstants.SERVER_NAME + "] Commandes /stratum enregistrées.");
+        getCommandRegistry().registerCommand(new HyzaliaPasteCommand());
+        LOGGER.atInfo().log("[" + PaintingConstants.SERVER_NAME + "] Commandes /hyzaliapaste enregistrées.");
+
+        getEntityStoreRegistry().registerSystem(new HyzaliaPasteToolClipboardSyncSystem());
+        LOGGER.atInfo().log("[" + PaintingConstants.SERVER_NAME
+                + "] Sync preview clipboard (outil en main, après chunks ready) enregistré.");
     }
 
     @Override
@@ -64,11 +91,6 @@ public class PaintingPlugin extends JavaPlugin {
         return instance;
     }
 
-    /**
-     * Diagnostic au démarrage : depuis la prerelease, {@code ToolOperation#executeBlock} est
-     * {@code protected} (remplace {@code execute0}). Une sous-classe dans le même package logique
-     * peut l’overrider sans early-bridge ; le JAR early-bridge reste optionnel pour compatibilité.
-     */
     private static void logToolOperationExecuteBlockBridgeHint() {
         try {
             Method m = ToolOperation.class.getDeclaredMethod("executeBlock", int.class, int.class, int.class);

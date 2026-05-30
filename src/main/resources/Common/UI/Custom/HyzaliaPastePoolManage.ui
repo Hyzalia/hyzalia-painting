@@ -1,0 +1,200 @@
+@TitleStyle = LabelStyle(FontSize: 16, RenderBold: true, TextColor: #e8c872);
+@HintStyle = LabelStyle(FontSize: 13, TextColor: #a5b4c4, Wrap: true);
+@RowLabelStyle = LabelStyle(FontSize: 13, TextColor: #d0dae4, VerticalAlignment: Center);
+@PercentStyle = LabelStyle(FontSize: 12, TextColor: #8a9bb0, VerticalAlignment: Center);
+@FieldStyle = (FontSize: 13, TextColor: #d0dae4);
+@InputBackground = (Color: #1a2030(0.95));
+@PanelBackground = (Color: #121820(0.96));
+
+@PrimaryLabelStyle = LabelStyle(FontSize: 13, RenderBold: true, TextColor: #1a1408, HorizontalAlignment: Center, VerticalAlignment: Center);
+@SecondaryLabelStyle = LabelStyle(FontSize: 12, TextColor: #d0dae4, HorizontalAlignment: Center, VerticalAlignment: Center);
+
+@PrimaryButtonStyle = TextButtonStyle(
+  Default: (Background: (Color: #e8c872), LabelStyle: @PrimaryLabelStyle),
+  Hovered: (Background: (Color: #f5dc9a), LabelStyle: @PrimaryLabelStyle),
+  Pressed: (Background: (Color: #c9a227), LabelStyle: @PrimaryLabelStyle),
+  Disabled: (Background: (Color: #555555), LabelStyle: (...@PrimaryLabelStyle, TextColor: #999999))
+);
+
+@SecondaryButtonStyle = TextButtonStyle(
+  Default: (Background: (Color: #3a4555), LabelStyle: @SecondaryLabelStyle),
+  Hovered: (Background: (Color: #4a5668), LabelStyle: @SecondaryLabelStyle),
+  Pressed: (Background: (Color: #2a3340), LabelStyle: @SecondaryLabelStyle),
+  Disabled: (Background: (Color: #555555), LabelStyle: (...@SecondaryLabelStyle, TextColor: #888888))
+);
+
+@SelectStyle = LabelStyle(FontSize: 14, TextColor: #e8c872, VerticalAlignment: Center, HorizontalAlignment: Center);
+@NameRowLabelStyle = LabelStyle(FontSize: 13, TextColor: #d0dae4, VerticalAlignment: Center, HorizontalAlignment: Start);
+@NameButtonStyle = TextButtonStyle(
+  Default: (Background: (Color: #000000(0)), LabelStyle: @NameRowLabelStyle),
+  Hovered: (Background: (Color: #2a3548(0.55)), LabelStyle: @NameRowLabelStyle),
+  Pressed: (Background: (Color: #1a2030(0.75)), LabelStyle: @NameRowLabelStyle),
+  Disabled: (Background: (Color: #000000(0)), LabelStyle: (...@NameRowLabelStyle, TextColor: #666666))
+);
+
+Group #Root {
+  LayoutMode: Top;
+  Anchor: (Width: 1080, Height: 620);
+  Background: @PanelBackground;
+  Padding: (Full: 16);
+
+  Label #Title {
+    Style: @TitleStyle;
+    Padding: (Bottom: 8);
+  }
+
+  Group {
+    LayoutMode: Left;
+    FlexWeight: 1;
+
+    Group #ListPanel {
+      LayoutMode: Top;
+      FlexWeight: 1;
+      Padding: (Right: 12);
+
+      Label #EmptyHint {
+        Style: @HintStyle;
+        Visible: false;
+        Padding: (Bottom: 8);
+      }
+
+      Group {
+        LayoutMode: TopScrolling;
+        FlexWeight: 1;
+
+        Group #Rows {
+          LayoutMode: Top;
+
+          Group #Row0 { LayoutMode: Left; Visible: false; Padding: (Bottom: 6); Anchor: (Height: 36);
+            Label #Select0 { Anchor: (Width: 20, Height: 28); Style: @SelectStyle; Text: "-"; }
+            TextButton #Name0 { FlexWeight: 1; Anchor: (Height: 28); Style: @NameButtonStyle; Padding: (Left: 6); }
+            Label #Percent0 { Anchor: (Width: 52); Style: @PercentStyle; }
+            NumberField #Weight0 { Anchor: (Width: 64, Height: 28); Style: @FieldStyle; Padding: (Left: 6); Background: @InputBackground; }
+            TextButton #Remove0 { Anchor: (Width: 72, Height: 28, Left: 8); Style: @SecondaryButtonStyle; Text: "Remove"; }
+          }
+          Group #Row1 { LayoutMode: Left; Visible: false; Padding: (Bottom: 6); Anchor: (Height: 36);
+            Label #Select1 { Anchor: (Width: 20, Height: 28); Style: @SelectStyle; Text: "-"; }
+            TextButton #Name1 { FlexWeight: 1; Anchor: (Height: 28); Style: @NameButtonStyle; Padding: (Left: 6); }
+            Label #Percent1 { Anchor: (Width: 52); Style: @PercentStyle; }
+            NumberField #Weight1 { Anchor: (Width: 64, Height: 28); Style: @FieldStyle; Padding: (Left: 6); Background: @InputBackground; }
+            TextButton #Remove1 { Anchor: (Width: 72, Height: 28, Left: 8); Style: @SecondaryButtonStyle; Text: "Remove"; }
+          }
+          Group #Row2 { LayoutMode: Left; Visible: false; Padding: (Bottom: 6); Anchor: (Height: 36);
+            Label #Select2 { Anchor: (Width: 20, Height: 28); Style: @SelectStyle; Text: "-"; }
+            TextButton #Name2 { FlexWeight: 1; Anchor: (Height: 28); Style: @NameButtonStyle; Padding: (Left: 6); }
+            Label #Percent2 { Anchor: (Width: 52); Style: @PercentStyle; }
+            NumberField #Weight2 { Anchor: (Width: 64, Height: 28); Style: @FieldStyle; Padding: (Left: 6); Background: @InputBackground; }
+            TextButton #Remove2 { Anchor: (Width: 72, Height: 28, Left: 8); Style: @SecondaryButtonStyle; Text: "Remove"; }
+          }
+          Group #Row3 { LayoutMode: Left; Visible: false; Padding: (Bottom: 6); Anchor: (Height: 36);
+            Label #Select3 { Anchor: (Width: 20, Height: 28); Style: @SelectStyle; Text: "-"; }
+            TextButton #Name3 { FlexWeight: 1; Anchor: (Height: 28); Style: @NameButtonStyle; Padding: (Left: 6); }
+            Label #Percent3 { Anchor: (Width: 52); Style: @PercentStyle; }
+            NumberField #Weight3 { Anchor: (Width: 64, Height: 28); Style: @FieldStyle; Padding: (Left: 6); Background: @InputBackground; }
+            TextButton #Remove3 { Anchor: (Width: 72, Height: 28, Left: 8); Style: @SecondaryButtonStyle; Text: "Remove"; }
+          }
+          Group #Row4 { LayoutMode: Left; Visible: false; Padding: (Bottom: 6); Anchor: (Height: 36);
+            Label #Select4 { Anchor: (Width: 20, Height: 28); Style: @SelectStyle; Text: "-"; }
+            TextButton #Name4 { FlexWeight: 1; Anchor: (Height: 28); Style: @NameButtonStyle; Padding: (Left: 6); }
+            Label #Percent4 { Anchor: (Width: 52); Style: @PercentStyle; }
+            NumberField #Weight4 { Anchor: (Width: 64, Height: 28); Style: @FieldStyle; Padding: (Left: 6); Background: @InputBackground; }
+            TextButton #Remove4 { Anchor: (Width: 72, Height: 28, Left: 8); Style: @SecondaryButtonStyle; Text: "Remove"; }
+          }
+          Group #Row5 { LayoutMode: Left; Visible: false; Padding: (Bottom: 6); Anchor: (Height: 36);
+            Label #Select5 { Anchor: (Width: 20, Height: 28); Style: @SelectStyle; Text: "-"; }
+            TextButton #Name5 { FlexWeight: 1; Anchor: (Height: 28); Style: @NameButtonStyle; Padding: (Left: 6); }
+            Label #Percent5 { Anchor: (Width: 52); Style: @PercentStyle; }
+            NumberField #Weight5 { Anchor: (Width: 64, Height: 28); Style: @FieldStyle; Padding: (Left: 6); Background: @InputBackground; }
+            TextButton #Remove5 { Anchor: (Width: 72, Height: 28, Left: 8); Style: @SecondaryButtonStyle; Text: "Remove"; }
+          }
+          Group #Row6 { LayoutMode: Left; Visible: false; Padding: (Bottom: 6); Anchor: (Height: 36);
+            Label #Select6 { Anchor: (Width: 20, Height: 28); Style: @SelectStyle; Text: "-"; }
+            TextButton #Name6 { FlexWeight: 1; Anchor: (Height: 28); Style: @NameButtonStyle; Padding: (Left: 6); }
+            Label #Percent6 { Anchor: (Width: 52); Style: @PercentStyle; }
+            NumberField #Weight6 { Anchor: (Width: 64, Height: 28); Style: @FieldStyle; Padding: (Left: 6); Background: @InputBackground; }
+            TextButton #Remove6 { Anchor: (Width: 72, Height: 28, Left: 8); Style: @SecondaryButtonStyle; Text: "Remove"; }
+          }
+          Group #Row7 { LayoutMode: Left; Visible: false; Padding: (Bottom: 6); Anchor: (Height: 36);
+            Label #Select7 { Anchor: (Width: 20, Height: 28); Style: @SelectStyle; Text: "-"; }
+            TextButton #Name7 { FlexWeight: 1; Anchor: (Height: 28); Style: @NameButtonStyle; Padding: (Left: 6); }
+            Label #Percent7 { Anchor: (Width: 52); Style: @PercentStyle; }
+            NumberField #Weight7 { Anchor: (Width: 64, Height: 28); Style: @FieldStyle; Padding: (Left: 6); Background: @InputBackground; }
+            TextButton #Remove7 { Anchor: (Width: 72, Height: 28, Left: 8); Style: @SecondaryButtonStyle; Text: "Remove"; }
+          }
+          Group #Row8 { LayoutMode: Left; Visible: false; Padding: (Bottom: 6); Anchor: (Height: 36);
+            Label #Select8 { Anchor: (Width: 20, Height: 28); Style: @SelectStyle; Text: "-"; }
+            TextButton #Name8 { FlexWeight: 1; Anchor: (Height: 28); Style: @NameButtonStyle; Padding: (Left: 6); }
+            Label #Percent8 { Anchor: (Width: 52); Style: @PercentStyle; }
+            NumberField #Weight8 { Anchor: (Width: 64, Height: 28); Style: @FieldStyle; Padding: (Left: 6); Background: @InputBackground; }
+            TextButton #Remove8 { Anchor: (Width: 72, Height: 28, Left: 8); Style: @SecondaryButtonStyle; Text: "Remove"; }
+          }
+          Group #Row9 { LayoutMode: Left; Visible: false; Padding: (Bottom: 6); Anchor: (Height: 36);
+            Label #Select9 { Anchor: (Width: 20, Height: 28); Style: @SelectStyle; Text: "-"; }
+            TextButton #Name9 { FlexWeight: 1; Anchor: (Height: 28); Style: @NameButtonStyle; Padding: (Left: 6); }
+            Label #Percent9 { Anchor: (Width: 52); Style: @PercentStyle; }
+            NumberField #Weight9 { Anchor: (Width: 64, Height: 28); Style: @FieldStyle; Padding: (Left: 6); Background: @InputBackground; }
+            TextButton #Remove9 { Anchor: (Width: 72, Height: 28, Left: 8); Style: @SecondaryButtonStyle; Text: "Remove"; }
+          }
+          Group #Row10 { LayoutMode: Left; Visible: false; Padding: (Bottom: 6); Anchor: (Height: 36);
+            Label #Select10 { Anchor: (Width: 20, Height: 28); Style: @SelectStyle; Text: "-"; }
+            TextButton #Name10 { FlexWeight: 1; Anchor: (Height: 28); Style: @NameButtonStyle; Padding: (Left: 6); }
+            Label #Percent10 { Anchor: (Width: 52); Style: @PercentStyle; }
+            NumberField #Weight10 { Anchor: (Width: 64, Height: 28); Style: @FieldStyle; Padding: (Left: 6); Background: @InputBackground; }
+            TextButton #Remove10 { Anchor: (Width: 72, Height: 28, Left: 8); Style: @SecondaryButtonStyle; Text: "Remove"; }
+          }
+          Group #Row11 { LayoutMode: Left; Visible: false; Padding: (Bottom: 6); Anchor: (Height: 36);
+            Label #Select11 { Anchor: (Width: 20, Height: 28); Style: @SelectStyle; Text: "-"; }
+            TextButton #Name11 { FlexWeight: 1; Anchor: (Height: 28); Style: @NameButtonStyle; Padding: (Left: 6); }
+            Label #Percent11 { Anchor: (Width: 52); Style: @PercentStyle; }
+            NumberField #Weight11 { Anchor: (Width: 64, Height: 28); Style: @FieldStyle; Padding: (Left: 6); Background: @InputBackground; }
+            TextButton #Remove11 { Anchor: (Width: 72, Height: 28, Left: 8); Style: @SecondaryButtonStyle; Text: "Remove"; }
+          }
+        }
+      }
+    }
+
+    Group #PreviewPanel {
+      LayoutMode: Top;
+      Anchor: (Width: 420, Height: 520);
+      Background: (Color: #0f1419(0.92));
+      Padding: (Full: 10);
+
+      Label #PreviewTitle {
+        Style: (FontSize: 14, RenderBold: true, TextColor: #e8c872);
+        Text: %server.hyzalia.paint.paste.managePreviewTitle;
+        Padding: (Bottom: 6);
+      }
+
+      Label #PreviewHint {
+        Style: @HintStyle;
+        Visible: false;
+        Text: %server.hyzalia.paint.paste.managePreviewHint;
+        Padding: (Bottom: 6);
+      }
+
+      Group {
+        LayoutMode: Full;
+        FlexWeight: 1;
+
+        PrefabPreviewComponent #PrefabPreview {
+          AllowDragYaw: true;
+          AllowDragPitch: true;
+          AllowZoom: true;
+          AllowPan: true;
+          ShowAnchor: true;
+        }
+      }
+    }
+  }
+
+  Group #Footer {
+    LayoutMode: Top;
+    Padding: (Top: 10);
+
+    TextButton #AddPrefabButton {
+      Anchor: (Height: 36);
+      Style: @PrimaryButtonStyle;
+      Text: %server.hyzalia.paint.paste.addPrefab;
+    }
+  }
+}

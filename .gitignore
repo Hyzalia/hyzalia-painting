@@ -63,9 +63,23 @@ libs/HytaleServer.jar
 buildSrc/
 Assets/
 
-# Cursor / agents
-.cursor/
-.cursorignore
-AGENTS.md
-audit.md
-agent-transcripts/
+# Artefacts JAR extraits par erreur (HytaleServer.jar, etc.)
+/META-INF/
+/com/
+/org/
+/io/
+/ch/
+/it/
+/google/
+/joptsimple/
+/native/
+/migration/
+/update/
+/aix/
+/darwin/
+/freebsd/
+/linux/
+/win/
+/bundledDefaults/
+/jwks_bundled.json
+/librocksdbjni-*

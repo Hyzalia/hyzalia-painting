@@ -83,7 +83,7 @@ tasks.register('updatePluginManifest') {
         def manifestJson = new groovy.json.JsonSlurper().parseText(manifestFile.text)
         manifestJson.Version = version
         manifestJson.IncludesAssetPack = includes_pack.toBoolean()
-        manifestJson.ServerVersion = hytale_build
+        manifestJson.ServerVersion = "*"
         manifestFile.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(manifestJson))
     }
 }
@@ -115,17 +115,24 @@ tasks.register('verifyShadowJarContainsLayersStratum') {
     description = 'Vérifie le JAR plugin : pont LayersStratum présent, aucune autre classe buildertools Hypixel embarquée.'
     doLast {
         def jarFile = tasks.named('shadowJar').get().archiveFile.get().asFile
-        def allowedBridge = 'com/hypixel/hytale/builtin/buildertools/tooloperations/LayersStratumOperation.class'
+        def allowedBridge = [
+                'com/hypixel/hytale/builtin/buildertools/tooloperations/LayersStratumOperation.class',
+                'com/hypixel/hytale/builtin/buildertools/prefablist/HyzaliaMultiPrefabPastePage.class',
+                'com/hypixel/hytale/builtin/buildertools/prefablist/PrefabBrowsePathResolver.class',
+                'com/hypixel/hytale/builtin/buildertools/prefablist/PrefabBrowsePathResolver$ResolvedPrefab.class',
+                'com/hypixel/hytale/builtin/buildertools/prefablist/PrefabPreviewSender.class',
+        ] as Set
         def prefix = 'com/hypixel/hytale/builtin/buildertools/'
         new java.util.jar.JarFile(jarFile).withCloseable { jar ->
-            if (jar.getEntry(allowedBridge) == null) {
+            def missing = allowedBridge.findAll { jar.getEntry(it) == null }
+            if (!missing.isEmpty()) {
                 throw new GradleException(
-                        "JAR plugin incomplet : entrée manquante ${allowedBridge}. " +
+                        "JAR plugin incomplet : entrées pont manquantes ${missing}. " +
                         "Vérifier qu'aucune exclusion ne retire les sources com/hypixel sous src/main/java.")
             }
             def forbidden = [] as ArrayList<String>
             jar.entries().each { e ->
-                if (!e.directory && e.name.endsWith('.class') && e.name.startsWith(prefix) && e.name != allowedBridge) {
+                if (!e.directory && e.name.endsWith('.class') && e.name.startsWith(prefix) && !allowedBridge.contains(e.name)) {
                     forbidden.add(e.name)
                 }
             }
@@ -134,6 +141,17 @@ tasks.register('verifyShadowJarContainsLayersStratum') {
                         "JAR plugin invalide : ne doit embarquer aucune classe sous ${prefix} sauf ${allowedBridge}. " +
                         "Trouvé : ${forbidden.take(12)}${forbidden.size() > 12 ? '...' : ''}. " +
                         "Cela duplique l'API BuilderTools et provoque AbstractMethodError (ex. runtimeOnly du serveur dans shadow).")
+            }
+            def clientAssets = [] as ArrayList<String>
+            jar.entries().each { e ->
+                if (!e.directory && e.name.startsWith('Client/')) {
+                    clientAssets.add(e.name)
+                }
+            }
+            if (!clientAssets.isEmpty()) {
+                throw new GradleException(
+                        "JAR plugin invalide : assets Client/ interdits (timeout JoinWorld). Trouvé : ${clientAssets}. " +
+                        "Utiliser Common/UI/Custom/ pour l'UI serveur.")
             }
         }
     }

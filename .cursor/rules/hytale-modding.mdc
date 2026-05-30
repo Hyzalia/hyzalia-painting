@@ -1,0 +1,60 @@
+---
+description: Conventions modding Hytale — API, UI, ponts package, docs officielles
+globs: src/main/java/**/*.java,src/main/resources/**/*
+alwaysApply: false
+---
+
+# Modding Hytale (Hyzalia Painting)
+
+## Documentation (consulter avant d’improviser)
+
+- API serveur (Javadoc) : https://release.server.docs.hytale.com/
+- Maven Hytale : `https://maven.hytale.com/release` et `https://maven.hytale.com/pre-release` (voir `build.gradle`)
+- Guides communautaires : https://github.com/HytaleModding/site (UI plugin, ECS, pages)
+- Pages custom : https://hytale-docs.pages.dev/gui/pages/
+
+## Interdictions
+
+- **Pas de réflexion** (`getDeclaredField`, `setAccessible`, `Method.invoke`) pour accéder à l’API vanilla.
+- **Pas de duplication** de classes `com.hypixel.*` dans le shadow JAR sauf ponts explicitement autorisés dans `verifyShadowJarContainsLayersStratum`.
+
+## Patterns approuvés
+
+### Pont package `com.hypixel…` (même package logique)
+
+Comme `LayersStratumOperation` et `HyzaliaMultiPrefabPastePage` :
+
+- Placer la sous-classe dans `src/main/java/com/hypixel/hytale/builtin/...` (même arborescence que le serveur).
+- Logique métier Hyzalia dans `com.hyzalia.paint.*` ; le pont appelle ces helpers publics.
+- Early-bridge (`early-bridge/`, `--accept-early-plugins`) pour `ToolOperation#executeBlock` et redirection `PrefabLoadCommand.execute` (Add Prefab).
+
+### UI
+
+- Fichiers `.ui` dans le pack d’assets du plugin (`IncludesAssetPack: true`).
+- Pages interactives : `InteractiveCustomUIPage` + `UICommandBuilder` / `UIEventBuilder` ; toujours `sendUpdate()` après un event.
+- HUD custom : `CustomUIHud` + `HudManager#addCustomHud` ; fichiers sous `Common/UI/Custom/`.
+- **Custom UI** (`Common/UI/Custom/*.ui`) : ne pas importer `$Common = "Common.ui"` ni `$Common.@*` (styles/templates non résolus). Définir styles inline (`TextButtonStyle`, `LabelStyle`, couleurs).
+- Quick settings BuilderTool : `{Id}ToolSettings.ui` sous `Client/.../QuickSettingsPanels/` — **interdit dans ce mod** tant que non validé (timeout JoinWorld à la connexion).
+- **Ne jamais** shipper de dossier `Client/` dans le JAR plugin : même un seul `.ui` peut empêcher le join (~30 s timeout « ready for chunks »).
+- Textes propres au mod dans les `.ui` Client : littéraux ou clés `%client.*` déjà présentes dans le jeu de base.
+- Légende HUD : `%client.*` vanilla OK ; texte Hyzalia en littéral si pas de merge lang fiable.
+- Pages serveur (`Common/UI/Custom/` via `openCustomPage`) : `%server.*` + `server.lang`.
+
+### BuilderTool paste Hyzalia
+
+- Outil dupliqué : `BuilderTool.Id = "Hyzalia_PasteTool"`, item `EditorTool_Hyzalia_PasteTool`.
+- **Pas de assets `Client/`** dans le JAR — timeout JoinWorld garanti.
+- **Pas de HudUI** custom sur l'item au join — comme LayersStratum.
+- **Pas de** `HyzaliaPastePoolHudSystem` ni filtre chat au join — réintroduire uniquement après validation connexion.
+- **Pas de HudUI** custom sur l’item au join — comme LayersStratum.
+- **Ne pas** enregistrer de système ECS qui pousse un CustomUIHud au changement de slot avant `ChunkTracker.isReadyForChunks()`.
+- Pool prefab : composant `MultiPrefabPasteState` attaché lazy via `ensure()`.
+- UI principale : `/hyzaliapaste manage` (`HyzaliaPastePoolManage.ui`) — bouton Add Prefab ouvre le navigateur puis revient au manage.
+- **Pas de HUD** overlay au join (l’UI cible = page manage / panel inventaire plus tard).
+- Handlers paste/randomize : `HyzaliaPasteToolPacketHandler` (délégation vanilla si autre outil).
+
+### Traductions
+
+- **Traductions plugin** : `Server/Languages/en-US/server.lang` (envoyé au client via `UpdateTranslations` à la connexion).
+- **Custom UI / pages serveur** : clés `%server.mon.cle` dans le `.ui` ; entrée `mon.cle=Texte` dans `server.lang` (sans préfixe `server.`).
+- **Items / args BuilderTool** : `builderTools.tools.{Id}.name`, `builderTools.tools.{Id}.addPrefab`, args dans `server.lang`.
