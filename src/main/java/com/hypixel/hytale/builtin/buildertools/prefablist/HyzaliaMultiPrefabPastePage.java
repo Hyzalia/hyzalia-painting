@@ -3,11 +3,13 @@ package com.hypixel.hytale.builtin.buildertools.prefablist;
 import com.hypixel.hytale.builtin.buildertools.BuilderToolsPlugin;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.protocol.packets.interface_.CustomUIEventBindingType;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.entity.entities.player.pages.PageManager;
 import com.hypixel.hytale.server.core.prefab.PrefabStore;
 import com.hypixel.hytale.server.core.ui.browser.FileBrowserEventData;
+import com.hypixel.hytale.server.core.ui.builder.EventData;
 import com.hypixel.hytale.server.core.ui.builder.UICommandBuilder;
 import com.hypixel.hytale.server.core.ui.builder.UIEventBuilder;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
@@ -16,6 +18,7 @@ import com.hyzalia.paint.paste.HyzaliaPasteToolConstants;
 import com.hyzalia.paint.paste.HyzaliaPasteToolService;
 import com.hyzalia.paint.paste.MultiPrefabListPage;
 import com.hyzalia.paint.paste.MultiPrefabPasteState;
+import com.hyzalia.paint.paste.PrefabPageListingRefresh;
 import com.hyzalia.paint.paste.WeightedPrefabEntry;
 
 import javax.annotation.Nonnull;
@@ -29,6 +32,9 @@ import java.util.Objects;
  * Navigateur prefab : le bouton « Add Prefab » ajoute à la pool pondérée (pas au clipboard vanilla).
  */
 public final class HyzaliaMultiPrefabPastePage extends PrefabPage {
+
+    private static final String RETURN_TO_MANAGE_FILE = "@hyzalia-return-manage";
+    private static final String ADD_BROWSER_BAR_UI = "HyzaliaPasteAddBrowserBar.ui";
 
     private final AssetPrefabFileProvider pathProvider = new AssetPrefabFileProvider();
     private final boolean returnToManageAfterAdd;
@@ -61,9 +67,7 @@ public final class HyzaliaMultiPrefabPastePage extends PrefabPage {
         commandBuilder.set(
                 "#CurrentPath.Text",
                 Message.translation("server.hyzalia.paint.paste.addBrowserTitle"));
-        commandBuilder.set(
-                "#LoadButton.TextSpans",
-                Message.translation("server.hyzalia.paint.paste.addPrefab"));
+        applyReturnToManageChrome(commandBuilder, eventBuilder);
     }
 
     @Override
@@ -71,6 +75,11 @@ public final class HyzaliaMultiPrefabPastePage extends PrefabPage {
             Ref<EntityStore> ref,
             Store<EntityStore> store,
             FileBrowserEventData pageData) {
+        if (returnToManageAfterAdd && RETURN_TO_MANAGE_FILE.equals(pageData.getFile())) {
+            openManagePage(ref, store);
+            return;
+        }
+
         if (pageData.getSearchQuery() != null) {
             super.handleDataEvent(ref, store, pageData);
             return;
@@ -92,6 +101,7 @@ public final class HyzaliaMultiPrefabPastePage extends PrefabPage {
                 selectedPrefab = resolved;
             }
             super.handleDataEvent(ref, store, pageData);
+            suppressVanillaLoadButton();
             return;
         }
 
@@ -185,11 +195,81 @@ public final class HyzaliaMultiPrefabPastePage extends PrefabPage {
         HyzaliaPasteToolService.syncPreviewClipboard(player, playerRef, ref, state, store);
 
         selectedPrefab = null;
-        PageManager pageManager = player.getPageManager();
+
         if (returnToManageAfterAdd) {
-            pageManager.openCustomPage(ref, store, new MultiPrefabListPage(playerRef));
-        } else {
-            pageManager.setPage(ref, store, com.hypixel.hytale.protocol.packets.interface_.Page.None);
+            refreshListing(ref, store);
+            return;
         }
+
+        player.getPageManager().setPage(
+                ref,
+                store,
+                com.hypixel.hytale.protocol.packets.interface_.Page.None);
+    }
+
+    private void refreshListing(Ref<EntityStore> ref, Store<EntityStore> store) {
+        PrefabPageListingRefresh.refresh(this);
+        if (returnToManageAfterAdd) {
+            UICommandBuilder commandBuilder = new UICommandBuilder();
+            UIEventBuilder eventBuilder = new UIEventBuilder();
+            reapplyReturnToManageChrome(commandBuilder, eventBuilder);
+            sendUpdate(commandBuilder, eventBuilder, false);
+        }
+    }
+
+    private void applyReturnToManageChrome(
+            @Nonnull UICommandBuilder commandBuilder,
+            @Nonnull UIEventBuilder eventBuilder) {
+        if (!returnToManageAfterAdd) {
+            commandBuilder.set(
+                    "#LoadButton.TextSpans",
+                    Message.translation("server.hyzalia.paint.paste.addPrefab"));
+            return;
+        }
+
+        commandBuilder.set("#HomeButton.Visible", false);
+        commandBuilder.set("#LoadButton.Visible", false);
+        commandBuilder.insertBefore("#LoadButton", ADD_BROWSER_BAR_UI);
+        bindReturnToManageButtons(eventBuilder);
+    }
+
+    private void reapplyReturnToManageChrome(
+            @Nonnull UICommandBuilder commandBuilder,
+            @Nonnull UIEventBuilder eventBuilder) {
+        if (!returnToManageAfterAdd) {
+            return;
+        }
+        commandBuilder.set("#HomeButton.Visible", false);
+        commandBuilder.set("#LoadButton.Visible", false);
+        bindReturnToManageButtons(eventBuilder);
+    }
+
+    /** Le parent affiche #LoadButton dès qu'une prefab est prévisualisée ; on le masque en mode Hyzalia. */
+    private void suppressVanillaLoadButton() {
+        if (!returnToManageAfterAdd) {
+            return;
+        }
+        UICommandBuilder commandBuilder = new UICommandBuilder();
+        commandBuilder.set("#LoadButton.Visible", false);
+        sendUpdate(commandBuilder, null, false);
+    }
+
+    private void bindReturnToManageButtons(@Nonnull UIEventBuilder eventBuilder) {
+        eventBuilder.addEventBinding(
+                CustomUIEventBindingType.Activating,
+                "#BackToManageButton",
+                EventData.of(FileBrowserEventData.KEY_FILE, RETURN_TO_MANAGE_FILE));
+        eventBuilder.addEventBinding(
+                CustomUIEventBindingType.Activating,
+                "#AddPrefabButton",
+                EventData.of("Browse", "true"));
+    }
+
+    private void openManagePage(Ref<EntityStore> ref, Store<EntityStore> store) {
+        Player player = Objects.requireNonNull(
+                store.getComponent(ref, Player.getComponentType()),
+                "Player component");
+        PageManager pageManager = player.getPageManager();
+        pageManager.openCustomPage(ref, store, new MultiPrefabListPage(playerRef));
     }
 }

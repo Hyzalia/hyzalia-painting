@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Random;
 
 /** Liste de prefabs pondérées associée au joueur (composant ECS). */
 public final class MultiPrefabPasteState implements Component<EntityStore> {
@@ -48,6 +49,8 @@ public final class MultiPrefabPasteState implements Component<EntityStore> {
 
     private final List<WeightedPrefabEntry> entries = new ArrayList<>();
     private int selectedIndex = -1;
+    /** Index du prochain prefab à poser (preview clipboard = WYSIWYG). Non sérialisé. */
+    private transient int pendingPasteIndex = -1;
 
     public static void registerComponentType(@Nonnull ComponentType<EntityStore, MultiPrefabPasteState> type) {
         componentType = type;
@@ -89,6 +92,7 @@ public final class MultiPrefabPasteState implements Component<EntityStore> {
     public void addEntry(@Nonnull WeightedPrefabEntry entry) {
         entries.add(Objects.requireNonNull(entry, "entry"));
         selectedIndex = entries.size() - 1;
+        invalidatePendingPaste();
     }
 
     public boolean removeAt(int index) {
@@ -103,6 +107,7 @@ public final class MultiPrefabPasteState implements Component<EntityStore> {
         } else if (selectedIndex == index) {
             selectedIndex = Math.min(index, entries.size() - 1);
         }
+        invalidatePendingPaste();
         return true;
     }
 
@@ -121,7 +126,58 @@ public final class MultiPrefabPasteState implements Component<EntityStore> {
         }
         WeightedPrefabEntry old = entry.get();
         entries.set(index, new WeightedPrefabEntry(old.prefabPath(), old.displayName(), weight));
+        invalidatePendingPaste();
         return true;
+    }
+
+    public void invalidatePendingPaste() {
+        pendingPasteIndex = -1;
+    }
+
+    @Nullable
+    public WeightedPrefabEntry pendingPasteEntry() {
+        if (pendingPasteIndex < 0 || pendingPasteIndex >= entries.size()) {
+            return null;
+        }
+        return entries.get(pendingPasteIndex);
+    }
+
+    @Nullable
+    public WeightedPrefabEntry ensurePendingPasteEntry(@Nonnull Random random) {
+        if (entries.isEmpty()) {
+            pendingPasteIndex = -1;
+            return null;
+        }
+        if (pendingPasteIndex >= 0 && pendingPasteIndex < entries.size()) {
+            return entries.get(pendingPasteIndex);
+        }
+        WeightedPrefabEntry picked = HyzaliaPastePrefabLoader.pickWeighted(entries, random);
+        if (picked == null) {
+            pendingPasteIndex = -1;
+            return null;
+        }
+        pendingPasteIndex = indexOfEntry(picked);
+        return picked;
+    }
+
+    @Nullable
+    public WeightedPrefabEntry takePendingPasteEntry() {
+        if (pendingPasteIndex < 0 || pendingPasteIndex >= entries.size()) {
+            return null;
+        }
+        WeightedPrefabEntry entry = entries.get(pendingPasteIndex);
+        pendingPasteIndex = -1;
+        return entry;
+    }
+
+    private int indexOfEntry(@Nonnull WeightedPrefabEntry target) {
+        String key = target.weightKey();
+        for (int i = 0; i < entries.size(); i++) {
+            if (entries.get(i).weightKey().equals(key)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     public int selectedIndex() {
@@ -160,6 +216,7 @@ public final class MultiPrefabPasteState implements Component<EntityStore> {
             copy.entries.add(new WeightedPrefabEntry(entry.prefabPath(), entry.displayName(), entry.weight()));
         }
         copy.selectedIndex = selectedIndex;
+        copy.pendingPasteIndex = -1;
         return copy;
     }
 }

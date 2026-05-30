@@ -1,0 +1,35 @@
+@PrimaryLabelStyle = LabelStyle(FontSize: 13, RenderBold: true, TextColor: #1a1408, HorizontalAlignment: Center, VerticalAlignment: Center);
+@SecondaryLabelStyle = LabelStyle(FontSize: 12, TextColor: #d0dae4, HorizontalAlignment: Center, VerticalAlignment: Center);
+
+@PrimaryButtonStyle = TextButtonStyle(
+  Default: (Background: (Color: #e8c872), LabelStyle: @PrimaryLabelStyle),
+  Hovered: (Background: (Color: #f5dc9a), LabelStyle: @PrimaryLabelStyle),
+  Pressed: (Background: (Color: #c9a227), LabelStyle: @PrimaryLabelStyle),
+  Disabled: (Background: (Color: #555555), LabelStyle: (...@PrimaryLabelStyle, TextColor: #999999))
+);
+
+@SecondaryButtonStyle = TextButtonStyle(
+  Default: (Background: (Color: #3a4555), LabelStyle: @SecondaryLabelStyle),
+  Hovered: (Background: (Color: #4a5668), LabelStyle: @SecondaryLabelStyle),
+  Pressed: (Background: (Color: #2a3340), LabelStyle: @SecondaryLabelStyle),
+  Disabled: (Background: (Color: #555555), LabelStyle: (...@SecondaryLabelStyle, TextColor: #888888))
+);
+
+Group {
+  LayoutMode: Left;
+  Anchor: (Top: 8, Height: 36);
+
+  TextButton #BackToManageButton {
+    Anchor: (Right: 8, Height: 36, Width: 180);
+    Style: @SecondaryButtonStyle;
+    Text: %server.hyzalia.paint.paste.backToManage;
+    Padding: (Horizontal: 10);
+  }
+
+  TextButton #AddPrefabButton {
+    FlexWeight: 1;
+    Anchor: (Height: 36);
+    Style: @PrimaryButtonStyle;
+    Text: %server.hyzalia.paint.paste.addPrefab;
+  }
+}

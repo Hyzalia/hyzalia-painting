@@ -122,12 +122,10 @@ public final class MultiPrefabListPage extends InteractiveCustomUIPage<MultiPref
                 return;
             }
             if (index < 0 || index >= state.size()) {
-                playerRef.sendMessage(Message.translation("server.hyzalia.paint.paste.invalidIndex"));
                 sendUpdate(null, null, false);
                 return;
             }
             if (weight < 1 || weight > 1000) {
-                playerRef.sendMessage(Message.translation("server.hyzalia.paint.paste.invalidWeight"));
                 sendUpdate(null, null, false);
                 return;
             }
@@ -137,9 +135,6 @@ public final class MultiPrefabListPage extends InteractiveCustomUIPage<MultiPref
                 return;
             }
             state.setWeightAt(index, weight);
-            playerRef.sendMessage(Message.translation("server.hyzalia.paint.paste.weightSet")
-                    .param("name", entry.displayName())
-                    .param("weight", weight));
             syncInGamePreviewIfHeld(player, playerRef, ref, state, store);
             refreshPercentages(ref, store);
             return;
@@ -261,7 +256,7 @@ public final class MultiPrefabListPage extends InteractiveCustomUIPage<MultiPref
                 EventData.of("Action", PageData.Action.Select.name())
                         .append("RowIndex", String.valueOf(index)));
         eventBuilder.addEventBinding(
-                CustomUIEventBindingType.Validating,
+                CustomUIEventBindingType.ValueChanged,
                 row + " #Weight",
                 EventData.of("Action", PageData.Action.SetWeight.name())
                         .append("RowIndex", String.valueOf(index))

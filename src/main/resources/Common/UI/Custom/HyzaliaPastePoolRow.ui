@@ -16,10 +16,10 @@
   Pressed: (LabelStyle: @NameLabelBold)
 );
 
-@FlatButtonStyle = TextButtonStyle(
-  Default: (Background: (Color: #3a4555), LabelStyle: (FontSize: 12, TextColor: #d0dae4, HorizontalAlignment: Center, VerticalAlignment: Center)),
-  Hovered: (Background: (Color: #4a5668), LabelStyle: (FontSize: 12, TextColor: #d0dae4, HorizontalAlignment: Center, VerticalAlignment: Center)),
-  Pressed: (Background: (Color: #2a3340), LabelStyle: (FontSize: 12, TextColor: #d0dae4, HorizontalAlignment: Center, VerticalAlignment: Center))
+@RemoveButtonStyle = TextButtonStyle(
+  Default: (Background: (Color: #8b2e2e), LabelStyle: (FontSize: 12, TextColor: #f5e6e6, HorizontalAlignment: Center, VerticalAlignment: Center)),
+  Hovered: (Background: (Color: #a83838), LabelStyle: (FontSize: 12, TextColor: #ffffff, HorizontalAlignment: Center, VerticalAlignment: Center)),
+  Pressed: (Background: (Color: #6e2424), LabelStyle: (FontSize: 12, TextColor: #f0d8d8, HorizontalAlignment: Center, VerticalAlignment: Center))
 );
 
 Group {
@@ -41,19 +41,20 @@ Group {
   }
 
   Label #Percent {
-    Anchor: (Width: 44, Height: 28);
+    Anchor: (Width: 48, Height: 28);
     Style: @PercentLabel;
+    Padding: (Right: 4);
   }
 
   NumberField #Weight {
-    Anchor: (Width: 56, Height: 28);
+    Anchor: (Width: 56, Height: 28, Left: 4);
     Style: @FieldStyle;
     Background: @InputBackground;
   }
 
   TextButton #Remove {
     Anchor: (Width: 64, Height: 28, Left: 6);
-    Style: @FlatButtonStyle;
+    Style: @RemoveButtonStyle;
     Text: "Remove";
   }
 }

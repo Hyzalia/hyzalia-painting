@@ -9,17 +9,14 @@ import com.hypixel.hytale.server.core.asset.type.buildertool.config.BuilderTool;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.inventory.InventoryComponent;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
-import com.hypixel.hytale.server.core.prefab.PrefabLoadException;
-import com.hypixel.hytale.server.core.prefab.selection.standard.BlockSelection;
 import com.hypixel.hytale.server.core.prefab.selection.standard.RotateBlockMode;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.Random;
 
-/** Logique paste : sélection pondérée, chargement clipboard, rotation aléatoire, délégation vanilla. */
+/** Logique paste : sélection pondérée, clipboard sans historique, délégation vanilla à la pose. */
 public final class HyzaliaPasteToolService {
 
     private HyzaliaPasteToolService() {
@@ -44,21 +41,29 @@ public final class HyzaliaPasteToolService {
         boolean pasteAir = tool != null && stack != null && HyzaliaPasteToolArgs.pasteAir(tool, stack);
 
         BuilderToolsPlugin.addToQueue(player, playerRef, (entityRef, builderState, queueAccessor) -> {
-            WeightedPrefabEntry picked = pickEntry(player, playerRef, state);
+            Random random = builderState.getRandom();
+            WeightedPrefabEntry picked = state.ensurePendingPasteEntry(random);
             if (picked == null) {
                 return;
             }
-            if (!loadIntoBuilderState(playerRef, builderState, picked, queueAccessor)) {
+
+            HyzaliaPasteClipboardHelper.ensurePendingClipboardLoaded(
+                    builderState, state, tool, stack, random);
+            if (builderState.getSelection() == null) {
+                HyzaliaPasteClipboardHelper.loadPendingIntoClipboard(
+                        builderState, picked, tool, stack, random);
+            }
+            if (builderState.getSelection() == null) {
                 return;
             }
-            if (tool != null && stack != null) {
-                applyToolRandomizeIfEnabled(entityRef, builderState, tool, stack, queueAccessor);
-            }
+
+            state.takePendingPasteEntry();
             builderState.paste(entityRef, x, y, z, false, !pasteAir, queueAccessor);
+            loadNextPendingPreview(playerRef, builderState, state, tool, stack, random);
         });
     }
 
-    /** Charge la prefab sélectionnée dans le clipboard builder (preview en jeu). */
+    /** Charge le prochain prefab pondéré dans le clipboard (preview en jeu = prochaine pose). */
     public static void syncPreviewClipboard(
             @Nonnull Player player,
             @Nonnull PlayerRef playerRef,
@@ -68,16 +73,24 @@ public final class HyzaliaPasteToolService {
         if (!HyzaliaPasteHeldTool.getHeld(ref, accessor).isPresent()) {
             return;
         }
-        WeightedPrefabEntry preview = state.selectedEntry();
-        if (preview == null) {
+        if (state.isEmpty()) {
             return;
         }
-        WeightedPrefabEntry entry = preview;
+
+        BuilderTool tool = BuilderTool.getActiveBuilderTool(ref, accessor);
+        ItemStack stack = InventoryComponent.getItemInHand(accessor, ref);
+        Random random = BuilderToolsPlugin.getState(player, playerRef).getRandom();
+        WeightedPrefabEntry entry = state.ensurePendingPasteEntry(random);
+        if (entry == null) {
+            return;
+        }
+
         BuilderToolsPlugin.addToQueue(
                 player,
                 playerRef,
                 (entityRef, builderState, queueAccessor) ->
-                        loadIntoBuilderState(playerRef, builderState, entry, queueAccessor));
+                        HyzaliaPasteClipboardHelper.loadPendingIntoClipboard(
+                                builderState, entry, tool, stack, random));
     }
 
     public static void applyRandomizeFromPacket(
@@ -101,11 +114,10 @@ public final class HyzaliaPasteToolService {
 
         RotateBlockMode finalRotateBlockMode = rotateBlockMode;
         BuilderToolsPlugin.addToQueue(player, playerRef, (entityRef, builderState, queueAccessor) -> {
-            WeightedPrefabEntry picked = pickEntry(player, playerRef, state);
-            if (picked == null) {
-                return;
-            }
-            if (!loadIntoBuilderState(playerRef, builderState, picked, queueAccessor)) {
+            Random random = builderState.getRandom();
+            HyzaliaPasteClipboardHelper.ensurePendingClipboardLoaded(
+                    builderState, state, tool, stack, random);
+            if (builderState.getSelection() == null) {
                 return;
             }
             builderState.applyRandomizeTransforms(
@@ -121,75 +133,17 @@ public final class HyzaliaPasteToolService {
         });
     }
 
-    private static void applyToolRandomizeIfEnabled(
-            @Nonnull Ref<EntityStore> ref,
-            @Nonnull BuilderToolsPlugin.BuilderState builderState,
-            @Nonnull BuilderTool tool,
-            @Nonnull ItemStack stack,
-            @Nonnull ComponentAccessor<EntityStore> accessor) {
-        String randomize = HyzaliaPasteToolArgs.randomizeRotation(tool, stack);
-        if ("No".equalsIgnoreCase(randomize)) {
-            return;
-        }
-
-        Random random = builderState.getRandom();
-        int deltaY = 0;
-        int deltaX = 0;
-        int deltaZ = 0;
-        if ("RandomY".equalsIgnoreCase(randomize) || "RandomXYZ".equalsIgnoreCase(randomize)) {
-            deltaY = pickRightAngle(random);
-        }
-        if ("RandomXYZ".equalsIgnoreCase(randomize)) {
-            deltaX = pickRightAngle(random);
-            deltaZ = pickRightAngle(random);
-        }
-
-        boolean randomFlip = HyzaliaPasteToolArgs.randomFlip(tool, stack);
-        RotateBlockMode rotateBlockMode = HyzaliaPasteToolArgs.rotateBlockMode(tool, stack);
-        builderState.applyRandomizeTransforms(
-                ref,
-                deltaX,
-                deltaY,
-                deltaZ,
-                randomFlip,
-                randomFlip,
-                randomFlip,
-                rotateBlockMode,
-                accessor);
-    }
-
-    @Nullable
-    private static WeightedPrefabEntry pickEntry(
-            @Nonnull Player player,
-            @Nonnull PlayerRef playerRef,
-            @Nonnull MultiPrefabPasteState state) {
-        WeightedPrefabEntry picked = HyzaliaPastePrefabLoader.pickWeighted(
-                state.entriesView(),
-                BuilderToolsPlugin.getState(player, playerRef).getRandom());
-        if (picked == null) {
-            playerRef.sendMessage(Message.translation("server.hyzalia.paint.paste.emptyList"));
-        }
-        return picked;
-    }
-
-    private static int pickRightAngle(@Nonnull Random random) {
-        return random.nextInt(4) * 90;
-    }
-
-    private static boolean loadIntoBuilderState(
+    private static void loadNextPendingPreview(
             @Nonnull PlayerRef playerRef,
             @Nonnull BuilderToolsPlugin.BuilderState builderState,
-            @Nonnull WeightedPrefabEntry entry,
-            @Nonnull ComponentAccessor<EntityStore> accessor) {
-        try {
-            BlockSelection selection = HyzaliaPastePrefabLoader.loadSelection(entry);
-            builderState.load(entry.displayName(), selection, accessor);
-            return true;
-        } catch (PrefabLoadException ex) {
-            playerRef.sendMessage(Message.translation("server.hyzalia.paint.paste.prefabNotFound")
-                    .param("name", entry.displayName())
-                    .param("path", entry.prefabPath()));
-            return false;
+            @Nonnull MultiPrefabPasteState state,
+            BuilderTool tool,
+            ItemStack stack,
+            @Nonnull Random random) {
+        WeightedPrefabEntry next = state.ensurePendingPasteEntry(random);
+        if (next != null) {
+            HyzaliaPasteClipboardHelper.loadPendingIntoClipboard(
+                    builderState, next, tool, stack, random);
         }
     }
 }
