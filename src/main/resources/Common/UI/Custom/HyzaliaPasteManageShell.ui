@@ -1,0 +1,89 @@
+@TitleStyle = LabelStyle(FontSize: 14, RenderBold: true, TextColor: #e8c872, RenderUppercase: true);
+@HintStyle = LabelStyle(FontSize: 12, TextColor: #8a9bb0, Wrap: true);
+@PanelBackground = (Color: #121820(0.96));
+@PreviewBackground = (Color: #0f1419(0.92));
+
+@PrimaryLabelStyle = LabelStyle(FontSize: 13, RenderBold: true, TextColor: #1a1408, HorizontalAlignment: Center, VerticalAlignment: Center);
+
+@PrimaryButtonStyle = TextButtonStyle(
+  Default: (Background: (Color: #e8c872), LabelStyle: @PrimaryLabelStyle),
+  Hovered: (Background: (Color: #f5dc9a), LabelStyle: @PrimaryLabelStyle),
+  Pressed: (Background: (Color: #c9a227), LabelStyle: @PrimaryLabelStyle),
+  Disabled: (Background: (Color: #555555), LabelStyle: (...@PrimaryLabelStyle, TextColor: #999999))
+);
+
+Group {
+  LayoutMode: Full;
+  Background: #000000(0.45);
+
+  Group #PrefabGroup {
+    LayoutMode: Center;
+    Anchor: (Full: 0);
+
+    Group {
+      LayoutMode: Left;
+      Anchor: (Height: 640);
+
+      Group {
+        Anchor: (Width: 580, Height: 640);
+        LayoutMode: Top;
+        Background: @PanelBackground;
+        Padding: (Full: 14);
+
+        Label #CurrentPath {
+          Style: @HintStyle;
+          Padding: (Bottom: 10);
+          Text: "";
+        }
+
+        TextButton #HomeButton {
+          Visible: false;
+          Anchor: (Width: 0, Height: 0);
+          Text: "";
+        }
+
+        TextField #SearchInput {
+          Visible: false;
+          Anchor: (Width: 0, Height: 0);
+        }
+
+        Group #FileList {
+          FlexWeight: 1;
+          LayoutMode: TopScrolling;
+        }
+
+        TextButton #LoadButton {
+          Anchor: (Height: 36, Top: 10);
+          Style: @PrimaryButtonStyle;
+          Text: %server.hyzalia.paint.paste.addPrefab;
+        }
+      }
+
+      Group #PreviewBackdrop {
+        Anchor: (Width: 540, Height: 640, Left: 14);
+        LayoutMode: Top;
+        Background: @PreviewBackground;
+        Padding: (Full: 12);
+
+        Label {
+          Style: @TitleStyle;
+          Text: %server.hyzalia.paint.paste.managePreviewTitle;
+          Padding: (Bottom: 8);
+        }
+
+        Group #Content {
+          LayoutMode: Full;
+          FlexWeight: 1;
+
+          PrefabPreviewComponent #PrefabPreview {
+            AllowDragYaw: true;
+            AllowDragPitch: true;
+            AllowZoom: true;
+            AllowPan: true;
+            ShowAnchor: true;
+          }
+        }
+      }
+    }
+  }
+}

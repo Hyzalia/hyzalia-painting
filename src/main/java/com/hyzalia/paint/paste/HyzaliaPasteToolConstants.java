@@ -9,11 +9,6 @@ public final class HyzaliaPasteToolConstants {
     /** Identifiant item éditeur (EditorTool_*.json sans préfixe EditorTool_). */
     public static final String ITEM_ID = "EditorTool_Hyzalia_PasteTool";
 
-    /** Commandes chat déclenchées par le bouton Add Prefab du panel (fallback client). */
-    public static final String PREFAB_LOAD_COMMAND = "/prefab load";
-    public static final String HYZALIA_ADD_COMMAND = "/hyzaliapaste add";
-    public static final String HYZALIA_LOAD_ALIAS = "/hyzaliapaste load";
-
     /** Poids par défaut lors de l'ajout d'une prefab à la liste. */
     public static final int DEFAULT_WEIGHT = 100;
 

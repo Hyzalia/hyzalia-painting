@@ -25,13 +25,13 @@ import java.util.Objects;
 
 /**
  * Gestion du pool pondéré.
- * Utilise {@code Pages/PrefabListPage.ui} (shell vanilla) pour le preview 3D {@code #PrefabPreview}.
+ * Utilise {@code HyzaliaPasteManageShell.ui} (overlay plein écran + preview {@code #PrefabPreview}).
  */
 public final class MultiPrefabListPage extends InteractiveCustomUIPage<MultiPrefabListPage.PageData> {
 
     private static final int MAX_VISIBLE_ROWS = 12;
-    /** Shell vanilla : panneau preview {@code #PrefabPreview} fonctionnel côté client. */
-    private static final String SHELL_UI = "Pages/PrefabListPage.ui";
+    /** Shell plein écran (sans marge {@code Top: 130} du {@code Pages/PrefabListPage.ui} vanilla). */
+    private static final String SHELL_UI = "HyzaliaPasteManageShell.ui";
     private static final String ROW_UI = "HyzaliaPastePoolRow.ui";
 
     public MultiPrefabListPage(@Nonnull PlayerRef playerRef) {
